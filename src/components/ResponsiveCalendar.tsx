@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence, PanInfo } from 'framer-motion';
-import { format, addDays, subDays, isSameDay, startOfWeek, addWeeks, subWeeks } from 'date-fns';
+import { format, addDays, subDays, isSameDay, startOfWeek, addWeeks, subWeeks, getHours, getMinutes, startOfHour } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Calendar, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { AppointmentCard } from '@/components/animated/AppointmentCard';
 import { useIsMobile } from '@/hooks/useIsMobile';
+import { calculateAppointmentHeight, calculateAppointmentTopOffset } from '@/utils/appointmentPosition';
 
 interface Appointment {
   id: string;
@@ -38,6 +39,7 @@ interface ResponsiveCalendarProps {
   timeSlots: string[];
   onCellClick: (day: Date, timeSlot: string) => void;
   getAppointmentForSlot: (day: Date, timeSlot: string) => Appointment | undefined;
+  getAppointmentsForDay?: (day: Date) => Appointment[]; // Nova prop para buscar todos os agendamentos do dia
   isTimeSlotBlocked: (day: Date, timeSlot: string) => boolean;
   getStatusColor: (status: string, date?: string, recurrence_id?: string, is_cortesia?: boolean) => string;
   getStatusLabel: (status: string, date?: string, is_cortesia?: boolean) => string;
@@ -51,6 +53,7 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
   timeSlots,
   onCellClick,
   getAppointmentForSlot,
+  getAppointmentsForDay,
   isTimeSlotBlocked,
   getStatusColor,
   getStatusLabel,
@@ -271,7 +274,7 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
       {/* Week Grid */}
       <div className="overflow-auto max-h-[600px] rounded-xl border border-slate-200">
         <div className="min-w-[700px]">
-          <table className="w-full border-collapse">
+          <table className="w-full border-collapse" style={{ position: 'relative' }}>
             <thead className="sticky top-0 z-10">
               <tr>
                 <th className="border border-slate-200 p-2 text-left font-bold bg-slate-50 text-slate-700 text-xs min-w-[60px]">
@@ -320,54 +323,161 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                     </div>
                   </motion.td>
                   {weekDays.map((day, j) => {
-                    const appointment = getAppointmentForSlot(day, timeSlot);
-                    const hasAppointment = !!appointment;
                     const isBlocked = isTimeSlotBlocked(day, timeSlot);
+                    const slotHour = parseInt(timeSlot.split(':')[0]);
+                    const slotMinute = parseInt(timeSlot.split(':')[1]) || 0;
+                    
+                    // Criar timestamp do início e fim do slot
+                    const slotStart = new Date(day);
+                    slotStart.setHours(slotHour, slotMinute, 0, 0);
+                    const slotEnd = new Date(slotStart);
+                    slotEnd.setHours(slotHour + 1, 0, 0, 0);
+                    
+                    // Buscar todos os agendamentos do dia
+                    const dayAppointments = getAppointmentsForDay ? getAppointmentsForDay(day) : [];
+                    
+                    // Se não houver getAppointmentsForDay, usar getAppointmentForSlot para compatibilidade
+                    const fallbackAppointment = !getAppointmentsForDay ? getAppointmentForSlot(day, timeSlot) : undefined;
+                    const allDayAppointments = dayAppointments.length > 0 ? dayAppointments : (fallbackAppointment ? [fallbackAppointment] : []);
+                    
+                    // Filtrar agendamentos que devem ser renderizados nesta célula
+                    // Renderizar apenas se o agendamento começa nesta célula ou antes dela
+                    const appointmentsToRender = allDayAppointments.filter((appointment) => {
+                      if (!appointment) return false;
+                      const aptStart = new Date(appointment.date);
+                      const aptEnd = appointment.end_time ? new Date(appointment.end_time) : new Date(aptStart.getTime() + 60 * 60 * 1000);
+                      
+                      // Verificar se o agendamento se sobrepõe com este slot
+                      const overlaps = aptStart < slotEnd && slotStart < aptEnd;
+                      
+                      if (!overlaps) return false;
+                      
+                      // Renderizar apenas se o agendamento começa antes ou no início deste slot
+                      // Isso evita renderizar o mesmo agendamento múltiplas vezes
+                      const aptStartHour = aptStart.getHours();
+                      const aptStartMinute = aptStart.getMinutes();
+                      const slotStartHour = slotStart.getHours();
+                      const slotStartMinute = slotStart.getMinutes();
+                      
+                      // Renderizar se começa antes ou no início deste slot
+                      return aptStartHour < slotStartHour || (aptStartHour === slotStartHour && aptStartMinute <= slotStartMinute);
+                    });
                     
                     return (
-                                             <motion.td 
-                         key={j} 
-                         className={`border border-slate-200 p-1 h-16 align-top cursor-pointer transition-all duration-200 min-w-[100px] relative ${
-                           hasAppointment 
-                             ? 'bg-gradient-to-br from-blue-50 to-indigo-50' 
-                             : isBlocked 
-                               ? 'bg-slate-100 border-slate-300' 
-                               : isSameDay(day, new Date()) 
-                                 ? 'bg-blue-50/50 hover:bg-blue-100/50' 
-                                 : 'bg-white hover:bg-slate-50'
-                         }`}
-                         onClick={() => onCellClick(day, timeSlot)}
-                         whileHover={{ scale: 1.02 }}
-                         transition={{ duration: 0.2 }}
-                       >
-                         <div className="w-full h-full flex items-center justify-center">
-                           <AnimatePresence mode="wait">
-                             {appointment ? (
-                               <AppointmentCard
-                                 key={appointment.id}
-                                 appointment={appointment}
-                                 onClick={() => onCellClick(day, timeSlot)}
-                                 getStatusColor={getStatusColor}
-                                 getStatusLabel={getStatusLabel}
-                                 date={appointment.date}
-                               />
-                             ) : (
-                               <motion.div
-                                 className="w-full h-full flex items-center justify-center"
-                                 initial={{ opacity: 0 }}
-                                 animate={{ opacity: 1 }}
-                                 exit={{ opacity: 0 }}
-                               >
-                                 {isBlocked && (
-                                   <div className="text-slate-400 text-xs">
-                                     {getBlockadeReason ? getBlockadeReason(day, timeSlot) || 'Bloqueado' : 'Bloqueado'}
-                                   </div>
-                                 )}
-                               </motion.div>
-                             )}
-                           </AnimatePresence>
-                         </div>
-                       </motion.td>
+                      <motion.td 
+                        key={j} 
+                        className={`border border-slate-200 p-0 h-16 align-top cursor-pointer transition-all duration-200 min-w-[100px] relative overflow-visible ${
+                          isBlocked 
+                            ? 'bg-slate-100 border-slate-300' 
+                            : isSameDay(day, new Date()) 
+                              ? 'bg-blue-50/50 hover:bg-blue-100/50' 
+                              : 'bg-white hover:bg-slate-50'
+                        }`}
+                        style={{ overflow: 'visible' }}
+                        onClick={() => onCellClick(day, timeSlot)}
+                        whileHover={{ scale: 1.01 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        {/* Renderizar blocos proporcionais */}
+                        {appointmentsToRender.map((appointment) => {
+                          if (!appointment) return null;
+                          
+                          const aptStart = new Date(appointment.date);
+                          const aptEnd = appointment.end_time ? new Date(appointment.end_time) : new Date(aptStart.getTime() + 60 * 60 * 1000);
+                          
+                          // Calcular altura proporcional (64px = 1 hora)
+                          const hourCellHeight = 64;
+                          const totalHeight = calculateAppointmentHeight(aptStart, aptEnd, hourCellHeight);
+                          
+                          // Calcular posição vertical dentro da célula
+                          const slotStartTime = slotStart.getTime();
+                          const aptStartTime = aptStart.getTime();
+                          
+                          let topOffset = 0;
+                          let height = totalHeight;
+                          
+                          if (aptStartTime >= slotStartTime) {
+                            // Agendamento começa dentro deste slot
+                            topOffset = calculateAppointmentTopOffset(aptStart, hourCellHeight);
+                            // Calcular altura até o fim do agendamento
+                            // Se o agendamento termina depois deste slot, calcular altura até o fim
+                            const slotEndTime = slotEnd.getTime();
+                            const aptEndTime = aptEnd.getTime();
+                            
+                            if (aptEndTime <= slotEndTime) {
+                              // Agendamento termina dentro deste slot
+                              height = totalHeight;
+                            } else {
+                              // Agendamento atravessa múltiplas células
+                              // Calcular altura até o fim do slot atual + altura das células seguintes
+                              const remainingHeight = totalHeight - topOffset;
+                              // Se a altura restante for maior que a célula, usar altura que atravessa
+                              height = Math.max(remainingHeight, hourCellHeight - topOffset);
+                            }
+                          } else {
+                            // Agendamento começa antes deste slot
+                            // Começar do topo desta célula
+                            topOffset = 0;
+                            // Calcular apenas a parte que está dentro desta célula
+                            const overlapStart = slotStartTime;
+                            const overlapEnd = Math.min(aptEnd.getTime(), slotEnd.getTime());
+                            const overlapDuration = overlapEnd - overlapStart;
+                            const overlapMinutes = Math.round(overlapDuration / (1000 * 60));
+                            height = (overlapMinutes / 60) * hourCellHeight;
+                            
+                            // Se o agendamento continua depois deste slot, aumentar altura
+                            if (aptEnd.getTime() > slotEnd.getTime()) {
+                              // Calcular quantas células adicionais o agendamento atravessa
+                              const additionalCells = Math.ceil((aptEnd.getTime() - slotEnd.getTime()) / (60 * 60 * 1000));
+                              height = hourCellHeight + (additionalCells * hourCellHeight);
+                            }
+                          }
+                          
+                          // Não limitar altura - permitir que atravesse múltiplas células
+                          // A altura pode ser maior que hourCellHeight se o agendamento atravessa múltiplas células
+                          
+                          // Calcular largura (100% da célula com pequeno padding)
+                          const width = 'calc(100% - 4px)';
+                          const left = '2px';
+                          
+                          return (
+                            <motion.div
+                              key={appointment.id}
+                              className="absolute rounded-md shadow-sm border border-blue-200/50 overflow-hidden cursor-pointer z-20"
+                              style={{
+                                top: `${topOffset}px`,
+                                left: left,
+                                width: width,
+                                height: `${Math.max(18, height)}px`,
+                                minHeight: '18px',
+                              }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onCellClick(day, timeSlot);
+                              }}
+                              whileHover={{ scale: 1.02, zIndex: 30 }}
+                              transition={{ duration: 0.2 }}
+                            >
+                              <AppointmentCard
+                                appointment={appointment}
+                                onClick={() => onCellClick(day, timeSlot)}
+                                getStatusColor={getStatusColor}
+                                getStatusLabel={getStatusLabel}
+                                date={appointment.date}
+                              />
+                            </motion.div>
+                          );
+                        })}
+                        
+                        {/* Mostrar bloqueio se não houver agendamentos */}
+                        {appointmentsToRender.length === 0 && isBlocked && (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <div className="text-slate-400 text-xs">
+                              {getBlockadeReason ? getBlockadeReason(day, timeSlot) || 'Bloqueado' : 'Bloqueado'}
+                            </div>
+                          </div>
+                        )}
+                      </motion.td>
                     );
                   })}
                 </tr>

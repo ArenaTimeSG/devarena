@@ -419,13 +419,34 @@ const Dashboard = () => {
     return addDays(weekStart, i);
   });
 
+  // Função para buscar todos os agendamentos de um dia específico
+  const getAppointmentsForDay = (day: Date): Appointment[] => {
+    return appointments.filter(apt => {
+      const aptDate = new Date(apt.date);
+      return isSameDay(aptDate, day);
+    });
+  };
+
+  // Função para buscar agendamento que se sobrepõe com um slot específico (compatibilidade)
   const getAppointmentForSlot = (day: Date, timeSlot: string) => {
     const slotHour = parseInt(timeSlot.split(':')[0]);
+    const slotMinute = parseInt(timeSlot.split(':')[1]) || 0;
     
+    // Criar timestamp do início do slot
+    const slotStart = new Date(day);
+    slotStart.setHours(slotHour, slotMinute, 0, 0);
+    const slotEnd = new Date(slotStart);
+    slotEnd.setHours(slotHour + 1, 0, 0, 0);
+    
+    // Buscar agendamento que se sobrepõe com o slot
     const appointment = appointments.find(apt => {
       const aptDate = new Date(apt.date);
-      const aptHour = aptDate.getHours();
-      return isSameDay(aptDate, day) && aptHour === slotHour;
+      if (!isSameDay(aptDate, day)) return false;
+      
+      const aptEnd = apt.end_time ? new Date(apt.end_time) : new Date(aptDate.getTime() + 60 * 60 * 1000);
+      
+      // Verificar sobreposição: (aptStart < slotEnd) && (slotStart < aptEnd)
+      return aptDate < slotEnd && slotStart < aptEnd;
     });
 
     return appointment;
@@ -1029,6 +1050,7 @@ const Dashboard = () => {
                   timeSlots={timeSlots}
                   onCellClick={handleCellClick}
                   getAppointmentForSlot={getAppointmentForSlot}
+                  getAppointmentsForDay={getAppointmentsForDay}
                   isTimeSlotBlocked={isTimeSlotBlocked}
                   getStatusColor={getStatusColor}
                   getStatusLabel={getStatusLabel}
