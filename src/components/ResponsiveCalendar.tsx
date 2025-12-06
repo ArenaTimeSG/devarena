@@ -380,6 +380,18 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                           const aptStart = new Date(appointment.date);
                           const aptEnd = appointment.end_time ? new Date(appointment.end_time) : new Date(aptStart.getTime() + 60 * 60 * 1000);
                           
+                          // Debug em desenvolvimento
+                          if (import.meta.env.DEV) {
+                            console.log('🔍 ResponsiveCalendar - Renderizando agendamento:', {
+                              id: appointment.id,
+                              start: aptStart.toISOString(),
+                              end: aptEnd.toISOString(),
+                              end_time: appointment.end_time,
+                              slot: timeSlot,
+                              day: format(day, 'dd/MM/yyyy')
+                            });
+                          }
+                          
                           // Calcular altura proporcional (64px = 1 hora)
                           const hourCellHeight = 64;
                           const totalHeight = calculateAppointmentHeight(aptStart, aptEnd, hourCellHeight);
