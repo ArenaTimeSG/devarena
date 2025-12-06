@@ -504,12 +504,22 @@ const AppointmentDetailsModal = ({
                     <p className="font-medium">
                       {(() => {
                         const startTime = appointment.date;
+                        // Debug em desenvolvimento
+                        if (isDevelopment) {
+                          console.log('🔍 AppointmentDetailsModal - Horário:', {
+                            startTime,
+                            end_time: appointment.end_time,
+                            hasEndTime: !!appointment.end_time
+                          });
+                        }
                         const endTime = appointment.end_time || (() => {
                           const start = new Date(startTime);
                           start.setHours(start.getHours() + 1);
                           return start.toISOString();
                         })();
-                        return `${format(new Date(startTime), 'HH:mm', { locale: ptBR })} → ${format(new Date(endTime), 'HH:mm', { locale: ptBR })}`;
+                        const startFormatted = format(new Date(startTime), 'HH:mm', { locale: ptBR });
+                        const endFormatted = format(new Date(endTime), 'HH:mm', { locale: ptBR });
+                        return `${startFormatted} → ${endFormatted}`;
                       })()}
                     </p>
                     <p className="text-sm text-muted-foreground">Horário</p>
