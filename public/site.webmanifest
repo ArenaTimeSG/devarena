@@ -1,0 +1,22 @@
+{
+  "name": "ArenaTime - Sistema de Gestão Inteligente",
+  "short_name": "ArenaTime",
+  "description": "Sistema de gestão inteligente para arenas esportivas",
+  "icons": [
+    {
+      "src": "/arena-time-favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/arena-time-favicon.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#10b981",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "start_url": "/"
+}
