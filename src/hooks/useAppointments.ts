@@ -8,6 +8,7 @@ export interface AppointmentWithModality {
   id: string;
   client_id: string;
   date: string;
+  end_time: string;
   status: 'a_cobrar' | 'pago' | 'cancelado' | 'agendado';
   modality: string | null;
   modality_id: string | null;
@@ -31,6 +32,7 @@ export interface AppointmentWithModality {
 export interface CreateAppointmentData {
   client_id: string;
   date: string;
+  end_time: string;
   modality_id: string;
   status?: 'a_cobrar' | 'pago' | 'cancelado' | 'agendado';
   recurrence_id?: string;
@@ -42,6 +44,7 @@ export interface CreateAppointmentData {
 export interface UpdateAppointmentData {
   client_id?: string;
   date?: string;
+  end_time?: string;
   modality_id?: string;
   status?: 'a_cobrar' | 'pago' | 'cancelado' | 'agendado';
   valor_total?: number;
@@ -212,6 +215,7 @@ export const useAppointments = () => {
         .insert({
           client_id: appointmentData.client_id,
           date: appointmentData.date,
+          end_time: appointmentData.end_time,
           modality_id: appointmentData.modality_id,
           valor_total: appointmentData.is_cortesia ? 0 : (appointmentData.customValue !== null ? appointmentData.customValue : modalityData.valor),
           is_cortesia: appointmentData.is_cortesia || false,

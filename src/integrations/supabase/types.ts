@@ -19,6 +19,7 @@ export type Database = {
           client_id: string
           created_at: string
           date: string
+          end_time: string
           id: string
           modality: string | null
           modality_id: string | null
@@ -31,6 +32,7 @@ export type Database = {
           client_id: string
           created_at?: string
           date: string
+          end_time: string
           id?: string
           modality?: string | null
           modality_id?: string | null
@@ -43,6 +45,7 @@ export type Database = {
           client_id?: string
           created_at?: string
           date?: string
+          end_time?: string
           id?: string
           modality?: string | null
           modality_id?: string | null
