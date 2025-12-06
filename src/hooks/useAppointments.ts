@@ -210,6 +210,20 @@ export const useAppointments = () => {
         throw new Error('Modalidade não encontrada');
       }
 
+      // Calcular valor proporcional baseado na duração
+      let valorTotal = modalityData.valor;
+      if (!appointmentData.is_cortesia && appointmentData.customValue === null) {
+        const startTime = new Date(appointmentData.date);
+        const endTime = new Date(appointmentData.end_time);
+        const durationMinutes = Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60));
+        
+        // Se a duração for diferente de 60 minutos, calcular proporcional
+        if (durationMinutes !== 60) {
+          // Assumir que o valor da modalidade é por hora
+          valorTotal = (modalityData.valor / 60) * durationMinutes;
+        }
+      }
+
       const { data, error } = await supabase
         .from('appointments')
         .insert({
@@ -217,7 +231,7 @@ export const useAppointments = () => {
           date: appointmentData.date,
           end_time: appointmentData.end_time,
           modality_id: appointmentData.modality_id,
-          valor_total: appointmentData.is_cortesia ? 0 : (appointmentData.customValue !== null ? appointmentData.customValue : modalityData.valor),
+          valor_total: appointmentData.is_cortesia ? 0 : (appointmentData.customValue !== null ? appointmentData.customValue : valorTotal),
           is_cortesia: appointmentData.is_cortesia || false,
           status: appointmentData.status || 'agendado',
           recurrence_id: appointmentData.recurrence_id,

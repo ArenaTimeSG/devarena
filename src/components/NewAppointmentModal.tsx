@@ -389,17 +389,29 @@ const NewAppointmentModal = ({
     const selectedModality = modalities.find(m => m.id === formData.modality_id);
     const modalityValue = selectedModality?.valor || 0;
     
+    // Calcular valor proporcional baseado na duração
+    const durationMs = endDateTime.getTime() - startDateTime.getTime();
+    const durationMinutes = Math.round(durationMs / (1000 * 60));
+    let calculatedValue = modalityValue;
+    
+    // Se a duração for diferente de 60 minutos e não houver valor customizado, calcular proporcional
+    if (!formData.isCortesia && formData.customValue === null && durationMinutes !== 60) {
+      calculatedValue = (modalityValue / 60) * durationMinutes;
+    }
+    
     console.log('🔍 NewAppointmentModal - Valor da modalidade para agendamentos recorrentes:', {
       modalityId: formData.modality_id,
       modalityName: selectedModality?.name,
-      modalityValue: modalityValue
+      modalityValue: modalityValue,
+      durationMinutes: durationMinutes,
+      calculatedValue: calculatedValue
     });
 
     // Criar template do agendamento para reutilização
     const appointmentTemplate = {
       client_id: formData.client_id,
       modality_id: formData.modality_id,
-      valor_total: formData.isCortesia ? 0 : (formData.customValue !== null ? formData.customValue : modalityValue),
+      valor_total: formData.isCortesia ? 0 : (formData.customValue !== null ? formData.customValue : calculatedValue),
       is_cortesia: formData.isCortesia,
       status: 'agendado' as const,
       recurrence_id: recurrenceId,

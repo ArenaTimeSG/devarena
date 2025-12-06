@@ -502,7 +502,15 @@ const AppointmentDetailsModal = ({
                   <Calendar className="h-5 w-5 text-primary" />
                   <div>
                     <p className="font-medium">
-                      {format(new Date(appointment.date), 'HH:mm', { locale: ptBR })}
+                      {(() => {
+                        const startTime = appointment.date;
+                        const endTime = appointment.end_time || (() => {
+                          const start = new Date(startTime);
+                          start.setHours(start.getHours() + 1);
+                          return start.toISOString();
+                        })();
+                        return `${format(new Date(startTime), 'HH:mm', { locale: ptBR })} → ${format(new Date(endTime), 'HH:mm', { locale: ptBR })}`;
+                      })()}
                     </p>
                     <p className="text-sm text-muted-foreground">Horário</p>
                   </div>
