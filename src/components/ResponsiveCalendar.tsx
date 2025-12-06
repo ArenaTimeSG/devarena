@@ -341,7 +341,7 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                     const allDayAppointments = dayAppointments.length > 0 ? dayAppointments : (fallbackAppointment ? [fallbackAppointment] : []);
                     
                     // Filtrar agendamentos que devem ser renderizados nesta célula
-                    // Renderizar apenas se o agendamento começa nesta célula ou antes dela
+                    // Renderizar apenas se o agendamento começa nesta célula (não antes)
                     const appointmentsToRender = allDayAppointments.filter((appointment) => {
                       if (!appointment) return false;
                       const aptStart = new Date(appointment.date);
@@ -352,15 +352,10 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                       
                       if (!overlaps) return false;
                       
-                      // Renderizar apenas se o agendamento começa antes ou no início deste slot
+                      // Renderizar apenas se o agendamento começa dentro deste slot
                       // Isso evita renderizar o mesmo agendamento múltiplas vezes
-                      const aptStartHour = aptStart.getHours();
-                      const aptStartMinute = aptStart.getMinutes();
-                      const slotStartHour = slotStart.getHours();
-                      const slotStartMinute = slotStart.getMinutes();
-                      
-                      // Renderizar se começa antes ou no início deste slot
-                      return aptStartHour < slotStartHour || (aptStartHour === slotStartHour && aptStartMinute <= slotStartMinute);
+                      // O agendamento começa dentro do slot se: slotStart <= aptStart < slotEnd
+                      return aptStart >= slotStart && aptStart < slotEnd;
                     });
                     
                     return (
@@ -396,41 +391,25 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                           let topOffset = 0;
                           let height = totalHeight;
                           
-                          if (aptStartTime >= slotStartTime) {
-                            // Agendamento começa dentro deste slot
-                            topOffset = calculateAppointmentTopOffset(aptStart, hourCellHeight);
-                            // Calcular altura até o fim do agendamento
-                            // Se o agendamento termina depois deste slot, calcular altura até o fim
-                            const slotEndTime = slotEnd.getTime();
-                            const aptEndTime = aptEnd.getTime();
-                            
-                            if (aptEndTime <= slotEndTime) {
-                              // Agendamento termina dentro deste slot
-                              height = totalHeight;
-                            } else {
-                              // Agendamento atravessa múltiplas células
-                              // Calcular altura até o fim do slot atual + altura das células seguintes
-                              const remainingHeight = totalHeight - topOffset;
-                              // Se a altura restante for maior que a célula, usar altura que atravessa
-                              height = Math.max(remainingHeight, hourCellHeight - topOffset);
-                            }
+                          // Agendamento sempre começa dentro deste slot (devido ao filtro acima)
+                          topOffset = calculateAppointmentTopOffset(aptStart, hourCellHeight);
+                          
+                          // Calcular altura até o fim do agendamento
+                          const slotEndTime = slotEnd.getTime();
+                          const aptEndTime = aptEnd.getTime();
+                          
+                          if (aptEndTime <= slotEndTime) {
+                            // Agendamento termina dentro deste slot
+                            // Usar altura total calculada
+                            height = totalHeight;
                           } else {
-                            // Agendamento começa antes deste slot
-                            // Começar do topo desta célula
-                            topOffset = 0;
-                            // Calcular apenas a parte que está dentro desta célula
-                            const overlapStart = slotStartTime;
-                            const overlapEnd = Math.min(aptEnd.getTime(), slotEnd.getTime());
-                            const overlapDuration = overlapEnd - overlapStart;
-                            const overlapMinutes = Math.round(overlapDuration / (1000 * 60));
-                            height = (overlapMinutes / 60) * hourCellHeight;
-                            
-                            // Se o agendamento continua depois deste slot, aumentar altura
-                            if (aptEnd.getTime() > slotEnd.getTime()) {
-                              // Calcular quantas células adicionais o agendamento atravessa
-                              const additionalCells = Math.ceil((aptEnd.getTime() - slotEnd.getTime()) / (60 * 60 * 1000));
-                              height = hourCellHeight + (additionalCells * hourCellHeight);
-                            }
+                            // Agendamento atravessa múltiplas células
+                            // Calcular altura até o fim do slot atual
+                            const heightUntilSlotEnd = hourCellHeight - topOffset;
+                            // Calcular quantas células adicionais o agendamento atravessa
+                            const additionalCells = Math.ceil((aptEndTime - slotEndTime) / (60 * 60 * 1000));
+                            // Altura total = altura até fim do slot + altura das células seguintes
+                            height = heightUntilSlotEnd + (additionalCells * hourCellHeight);
                           }
                           
                           // Não limitar altura - permitir que atravesse múltiplas células
