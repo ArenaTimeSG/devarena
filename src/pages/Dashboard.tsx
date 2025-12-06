@@ -42,6 +42,7 @@ import autoTable from 'jspdf-autotable';
 interface Appointment {
   id: string;
   date: string;
+  end_time?: string;
   status: 'a_cobrar' | 'pago' | 'cancelado' | 'agendado';
   modality: string | null;
   modality_id: string | null;
@@ -56,6 +57,7 @@ interface Appointment {
     valor: number;
   };
   recurrence_id?: string;
+  is_cortesia?: boolean;
 }
 
 const Dashboard = () => {

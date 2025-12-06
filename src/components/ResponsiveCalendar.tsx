@@ -13,6 +13,7 @@ import { useIsMobile } from '@/hooks/useIsMobile';
 interface Appointment {
   id: string;
   date: string;
+  end_time?: string;
   status: 'a_cobrar' | 'pago' | 'cancelado' | 'agendado';
   payment_status?: 'not_required' | 'pending' | 'failed';
   modality: string;

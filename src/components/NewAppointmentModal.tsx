@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { format, isBefore, isEqual } from 'date-fns';
+import { format, isBefore, isEqual, addHours } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -16,6 +16,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { ClientSearchDropdown } from '@/components/ClientSearchDropdown';
 import { AddClientModal } from '@/components/AddClientModal';
+import { validateAppointmentTime, appointmentsOverlap } from '@/utils/appointmentPosition';
 
 interface Client {
   id: string;
@@ -56,7 +57,8 @@ const NewAppointmentModal = ({
     client_id: '',
     modality_id: '',
     date: '',
-    time: '',
+    start_time: '', // Horário de início (HH:mm)
+    end_time: '', // Horário de fim (HH:mm)
     isRecurring: false,
     recurrenceType: 'data_final' as 'data_final' | 'repeticoes' | 'indeterminado',
     endDate: '',
@@ -85,12 +87,20 @@ const NewAppointmentModal = ({
         isOpen
       });
       
+      // Converter horário selecionado (HH:mm) para start_time e calcular end_time (+1h)
+      const startTime = selectedTime || '08:00';
+      const [hours, minutes] = startTime.split(':').map(Number);
+      const startDate = new Date(selectedDate);
+      startDate.setHours(hours, minutes || 0, 0, 0);
+      const endDate = addHours(startDate, 1);
+      
       // Atualizar formData com os dados selecionados
       const newFormData = {
         client_id: '',
         modality_id: '',
         date: format(selectedDate, 'yyyy-MM-dd'),
-        time: selectedTime, // Sempre definir o horário selecionado
+        start_time: startTime, // Horário de início selecionado
+        end_time: format(endDate, 'HH:mm'), // Horário de fim (início + 1h por padrão)
         isRecurring: false,
         recurrenceType: 'data_final' as 'data_final' | 'repeticoes' | 'indeterminado',
         endDate: '',
@@ -117,7 +127,8 @@ const NewAppointmentModal = ({
         client_id: '',
         modality_id: '',
         date: '',
-        time: '',
+        start_time: '',
+        end_time: '',
         isRecurring: false,
         recurrenceType: 'data_final',
         endDate: '',
@@ -147,36 +158,28 @@ const NewAppointmentModal = ({
     }
   };
 
-  // Gerar horários disponíveis baseados na data selecionada
-  const getAvailableTimeSlots = (date: string) => {
-    if (!date) return [];
-    
-    const selectedDate = new Date(date);
-    const availableHours = getAvailableHoursForDay(selectedDate);
-    
-    // Garantir que o horário selecionado esteja sempre disponível
-    if (selectedTime && !availableHours.includes(selectedTime)) {
-      availableHours.push(selectedTime);
-      availableHours.sort(); // Ordenar para manter consistência
-    }
-    
-    console.log('🔍 NewAppointmentModal - getAvailableTimeSlots:', {
-      date,
-      selectedTime,
-      availableHours,
-      includesSelectedTime: availableHours.includes(selectedTime || '')
-    });
-    
-    return availableHours;
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.client_id || !formData.date || !formData.time || !formData.modality_id) {
+    if (!formData.client_id || !formData.date || !formData.start_time || !formData.end_time || !formData.modality_id) {
       toast({
         title: 'Erro no agendamento',
         description: 'Todos os campos obrigatórios devem ser preenchidos',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Validar horários
+    const startDateTime = new Date(`${formData.date}T${formData.start_time}`);
+    const endDateTime = new Date(`${formData.date}T${formData.end_time}`);
+    
+    const validation = validateAppointmentTime(startDateTime, endDateTime);
+    if (!validation.isValid) {
+      toast({
+        title: 'Erro no agendamento',
+        description: validation.errorMessage || 'Horários inválidos',
         variant: 'destructive',
       });
       return;
@@ -204,34 +207,14 @@ const NewAppointmentModal = ({
     setIsLoading(true);
 
     try {
-      const appointmentDate = new Date(`${formData.date}T${formData.time}:00`);
+      const startDateTime = new Date(`${formData.date}T${formData.start_time}`);
+      const endDateTime = new Date(`${formData.date}T${formData.end_time}`);
       
-      // Comentado: Validação de data passada removida para permitir agendamentos retroativos
-      // if (isBefore(appointmentDate, new Date()) && !isEqual(appointmentDate, new Date())) {
-      //   toast({
-      //     title: 'Erro no agendamento',
-      //     description: 'Não é possível agendar para datas passadas',
-      //     variant: 'destructive',
-      //   });
-      //   return;
-      // }
-
       // Verificar se o dia está habilitado (pular se for agendamento forçado)
-      if (!forceAppointment && !isDayEnabled(appointmentDate)) {
+      if (!forceAppointment && !isDayEnabled(startDateTime)) {
         toast({
           title: 'Erro no agendamento',
           description: 'Este dia não está disponível para agendamento',
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      // Verificar se o horário está disponível
-      const availableSlots = getAvailableTimeSlots(formData.date);
-      if (!availableSlots.includes(formData.time)) {
-        toast({
-          title: 'Erro no agendamento',
-          description: 'Este horário não está disponível para agendamento',
           variant: 'destructive',
         });
         return;
@@ -243,48 +226,34 @@ const NewAppointmentModal = ({
         throw new Error('Usuário não autenticado');
       }
 
-      // Verificar conflitos de agendamento
-      if (formData.isRecurring) {
-        // Para agendamentos recorrentes, verificar todas as datas para este usuário
-        // Gerar um ID temporário para verificação de conflitos
-        const tempRecurrenceId = `temp_${Date.now()}`;
-        const recurringAppointments = generateRecurringAppointments(formData, appointmentDate, tempRecurrenceId);
-        const datesToCheck = recurringAppointments.map(a => a.date);
-        
-        const { data: existingAppointments, error: checkError } = await supabase
-          .from('appointments')
-          .select('id, date')
-          .eq('user_id', user.id)
-          .in('date', datesToCheck);
+      // Verificar conflitos de agendamento (sobreposição de intervalos)
+      const dayStart = new Date(formData.date);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(formData.date);
+      dayEnd.setHours(23, 59, 59, 999);
+      
+      // Buscar todos os agendamentos do dia para verificar sobreposições
+      const { data: existingAppointments, error: checkError } = await supabase
+        .from('appointments')
+        .select('id, date, end_time')
+        .eq('user_id', user.id)
+        .gte('date', dayStart.toISOString())
+        .lte('date', dayEnd.toISOString());
 
-        if (checkError) throw checkError;
+      if (checkError) throw checkError;
 
-        if (existingAppointments && existingAppointments.length > 0) {
-          const conflictingDates = existingAppointments.map(a => new Date(a.date).toLocaleDateString('pt-BR'));
-          toast({
-            title: 'Conflito de agendamentos',
-            description: `Já existem agendamentos nas seguintes datas: ${conflictingDates.join(', ')}`,
-            variant: 'destructive',
-          });
-          return;
-        }
-      } else {
-        // Para agendamento único, verificar apenas a data específica para este usuário
-        const { data: existingAppointment, error: checkError } = await supabase
-          .from('appointments')
-          .select('id')
-          .eq('user_id', user.id)
-          .eq('date', appointmentDate.toISOString())
-          .single();
+      // Verificar sobreposição com agendamentos existentes
+      if (existingAppointments && existingAppointments.length > 0) {
+        const hasOverlap = existingAppointments.some(apt => {
+          const existingStart = new Date(apt.date);
+          const existingEnd = new Date(apt.end_time);
+          return appointmentsOverlap(startDateTime, endDateTime, existingStart, existingEnd);
+        });
 
-        if (checkError && checkError.code !== 'PGRST116') {
-          throw checkError;
-        }
-
-        if (existingAppointment) {
+        if (hasOverlap) {
           toast({
             title: 'Erro no agendamento',
-            description: 'Já existe um agendamento neste horário',
+            description: 'Este horário conflita com um agendamento existente. Por favor, escolha outro horário.',
             variant: 'destructive',
           });
           return;
@@ -310,14 +279,14 @@ const NewAppointmentModal = ({
         console.log('🔍 NewAppointmentModal - Recorrência criada:', recurrenceData);
 
         // Criar agendamentos recorrentes com o recurrence_id correto
-        const appointments = generateRecurringAppointments(formData, appointmentDate, recurrenceData.id, user.id);
+        const appointments = generateRecurringAppointments(formData, startDateTime, endDateTime, recurrenceData.id, user.id);
         
         console.log('🔍 NewAppointmentModal - Criando agendamentos recorrentes:', {
           total: appointments.length,
           recurrenceId: recurrenceData.id,
           appointments: appointments.map(a => ({ 
             date: a.date, 
-            time: a.time, 
+            end_time: a.end_time, 
             valor_total: a.valor_total 
           }))
         });
@@ -355,7 +324,8 @@ const NewAppointmentModal = ({
         await createAppointment({
           client_id: formData.client_id,
           modality_id: formData.modality_id,
-          date: appointmentDate.toISOString(),
+          date: startDateTime.toISOString(),
+          end_time: endDateTime.toISOString(),
           status: 'agendado',
           is_cortesia: formData.isCortesia,
           customValue: formData.customValue
@@ -370,12 +340,14 @@ const NewAppointmentModal = ({
         client_id: '',
         modality_id: '',
         date: '',
-        time: '',
+        start_time: '',
+        end_time: '',
         isRecurring: false,
         recurrenceType: 'data_final',
         endDate: '',
         repetitions: 1,
-        isCortesia: false
+        isCortesia: false,
+        customValue: null
       });
 
     } catch (error: any) {
@@ -391,17 +363,26 @@ const NewAppointmentModal = ({
   };
 
   // Função otimizada para gerar agendamentos recorrentes
-  const generateRecurringAppointments = (formData: any, startDate: Date, recurrenceId: string, userId: string) => {
+  const generateRecurringAppointments = (
+    formData: any, 
+    startDateTime: Date, 
+    endDateTime: Date,
+    recurrenceId: string, 
+    userId: string
+  ) => {
     const appointments = [];
-    let currentDate = new Date(startDate);
+    let currentDate = new Date(startDateTime);
     let count = 0;
+    
+    // Calcular duração do agendamento
+    const durationMs = endDateTime.getTime() - startDateTime.getTime();
     
     // Pré-calcular limites para otimização
     const maxRepetitions = formData.recurrenceType === 'indeterminado' ? 52 : 
                           formData.recurrenceType === 'repeticoes' ? formData.repetitions : 
                           Number.MAX_SAFE_INTEGER;
     
-    const endDate = formData.recurrenceType === 'data_final' && formData.endDate ? 
+    const recurrenceEndDate = formData.recurrenceType === 'data_final' && formData.endDate ? 
                    new Date(formData.endDate) : null;
 
     // Buscar o valor da modalidade
@@ -428,7 +409,7 @@ const NewAppointmentModal = ({
 
     while (count < maxRepetitions) {
       // Verificar se deve parar baseado no tipo de recorrência
-      if (endDate && currentDate > endDate) {
+      if (recurrenceEndDate && currentDate > recurrenceEndDate) {
         break;
       }
 
@@ -436,9 +417,17 @@ const NewAppointmentModal = ({
       const isEnabled = isDayEnabled(currentDate);
       
       if (isEnabled) {
+        // Criar horário de início para esta ocorrência
+        const occurrenceStart = new Date(currentDate);
+        occurrenceStart.setHours(startDateTime.getHours(), startDateTime.getMinutes(), 0, 0);
+        
+        // Calcular horário de término mantendo a mesma duração
+        const occurrenceEnd = new Date(occurrenceStart.getTime() + durationMs);
+        
         appointments.push({
           ...appointmentTemplate,
-          date: currentDate.toISOString()
+          date: occurrenceStart.toISOString(),
+          end_time: occurrenceEnd.toISOString()
         });
       }
 
@@ -450,17 +439,6 @@ const NewAppointmentModal = ({
     return appointments;
   };
 
-  const availableTimeSlots = getAvailableTimeSlots(formData.date);
-  
-  // Debug: verificar horários disponíveis
-  console.log('🔍 NewAppointmentModal - Horários disponíveis:', {
-    date: formData.date,
-    selectedTime,
-    availableTimeSlots,
-    formDataTime: formData.time,
-    formDataTimeType: typeof formData.time,
-    formDataTimeLength: formData.time?.length
-  });
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -594,45 +572,60 @@ const NewAppointmentModal = ({
             />
           </div>
 
-          {/* Horário */}
-          <div>
-            <Label htmlFor="time">Horário *</Label>
-            <Select
-              key={`time-select-${formData.time}-${selectedTime}`} // Força re-render quando valores mudam
-              value={formData.time || selectedTime || ''}
-              onValueChange={(value) => {
-                console.log('🔍 NewAppointmentModal - Horário selecionado:', value);
-                console.log('🔍 NewAppointmentModal - Valor atual do formData.time:', formData.time);
-                console.log('🔍 NewAppointmentModal - Horários disponíveis:', availableTimeSlots);
-                setFormData(prev => ({ ...prev, time: value }));
-              }}
-              disabled={!formData.date || availableTimeSlots.length === 0}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder={
-                  !formData.date 
-                    ? "Selecione uma data primeiro" 
-                    : availableTimeSlots.length === 0 
-                      ? "Nenhum horário disponível" 
-                      : (formData.time || selectedTime)
-                        ? `Horário selecionado: ${formData.time || selectedTime}`
-                        : "Selecione um horário"
-                } />
-              </SelectTrigger>
-              <SelectContent>
-                {availableTimeSlots.map((time) => (
-                  <SelectItem key={time} value={time}>
-                    {time}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {formData.date && availableTimeSlots.length === 0 && (
-              <p className="text-sm text-red-500 mt-1">
-                Nenhum horário disponível para esta data
-              </p>
-            )}
+          {/* Horários - Início e Fim */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="start_time">Horário de Início *</Label>
+              <Input
+                id="start_time"
+                type="time"
+                value={formData.start_time}
+                onChange={(e) => {
+                  const newStartTime = e.target.value;
+                  setFormData(prev => {
+                    // Se end_time não estiver definido ou for anterior ao novo start_time, ajustar end_time
+                    let newEndTime = prev.end_time;
+                    if (!newEndTime || newEndTime <= newStartTime) {
+                      const [hours, minutes] = newStartTime.split(':').map(Number);
+                      const startDate = new Date(`${prev.date || '2000-01-01'}T${newStartTime}`);
+                      const endDate = addHours(startDate, 1);
+                      newEndTime = format(endDate, 'HH:mm');
+                    }
+                    return { ...prev, start_time: newStartTime, end_time: newEndTime };
+                  });
+                }}
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="end_time">Horário de Término *</Label>
+              <Input
+                id="end_time"
+                type="time"
+                value={formData.end_time}
+                min={formData.start_time || undefined}
+                onChange={(e) => {
+                  const newEndTime = e.target.value;
+                  // Validar que end_time > start_time
+                  if (formData.start_time && newEndTime <= formData.start_time) {
+                    toast({
+                      title: 'Horário inválido',
+                      description: 'O horário de término deve ser posterior ao horário de início',
+                      variant: 'destructive',
+                    });
+                    return;
+                  }
+                  setFormData(prev => ({ ...prev, end_time: newEndTime }));
+                }}
+                required
+              />
+            </div>
           </div>
+          {formData.start_time && formData.end_time && formData.end_time <= formData.start_time && (
+            <p className="text-sm text-red-500">
+              O horário de término deve ser posterior ao horário de início
+            </p>
+          )}
 
           {/* Recorrência */}
           <div className="flex items-center space-x-2">

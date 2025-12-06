@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, RotateCcw, Globe } from 'lucide-react';
+import { Calendar, RotateCcw, Globe, Clock } from 'lucide-react';
+import { formatTimeRange } from '@/utils/appointmentPosition';
 
 interface AppointmentCardProps {
   appointment: {
@@ -19,6 +20,8 @@ interface AppointmentCardProps {
     recurrence_id?: string;
     booking_source?: 'manual' | 'online';
     is_cortesia?: boolean;
+    date: string;
+    end_time?: string;
   };
   onClick: () => void;
   getStatusColor: (status: string, date?: string, recurrence_id?: string, is_cortesia?: boolean) => string;
@@ -152,7 +155,7 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
            </p>
          </div>
 
-         {/* Bottom: Modality and recurrence indicator */}
+         {/* Bottom: Modality and time */}
          <div className="flex items-center justify-between">
            <div className="flex items-center gap-0.5 opacity-90">
              <Calendar className="h-2 w-2" />
@@ -176,6 +179,24 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
              </motion.div>
            )}
          </div>
+         
+         {/* Time Range */}
+         {(appointment.date || date) && (
+           <div className="flex items-center gap-0.5 opacity-85 mt-0.5">
+             <Clock className="h-2 w-2" />
+             <p className="text-xs font-medium">
+               {(() => {
+                 const startTime = appointment.date || date || '';
+                 const endTime = appointment.end_time || (() => {
+                   const start = new Date(startTime);
+                   start.setHours(start.getHours() + 1);
+                   return start.toISOString();
+                 })();
+                 return formatTimeRange(startTime, endTime);
+               })()}
+             </p>
+           </div>
+         )}
        </div>
     </motion.div>
   );
