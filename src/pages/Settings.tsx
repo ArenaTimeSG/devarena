@@ -15,7 +15,7 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { useSettings } from '@/hooks/useSettings';
 import { useClientBookings } from '@/hooks/useClientBookings';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Clock, Bell, User, Shield, Settings as SettingsIcon, Palette, Save, AlertCircle, Calendar, Globe, Info, Court } from 'lucide-react';
+import { ArrowLeft, Clock, Bell, User, Shield, Settings as SettingsIcon, Palette, Save, AlertCircle, Calendar, Globe, Info, Building2 } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import ChangePasswordModal from '@/components/ChangePasswordModal';
 import { ToggleAgendamento } from '@/components/booking-settings/ToggleAgendamento';
@@ -862,7 +862,7 @@ const Settings = () => {
                 <CardContent className="p-6">
                   <div className="text-center space-y-4">
                     <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto">
-                      <Court className="h-8 w-8 text-white" />
+                      <Building2 className="h-8 w-8 text-white" />
                     </div>
                     <div>
                       <h3 className="text-lg font-semibold text-slate-800 mb-2">
@@ -876,7 +876,7 @@ const Settings = () => {
                       onClick={() => navigate('/courts')}
                       className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
                     >
-                      <Court className="h-4 w-4 mr-2" />
+                      <Building2 className="h-4 w-4 mr-2" />
                       Gerenciar Quadras
                     </Button>
                   </div>
