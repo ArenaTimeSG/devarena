@@ -8,7 +8,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Court } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
 
 interface CourtSelectorProps {
   className?: string;
@@ -23,7 +22,7 @@ const CourtSelector = ({ className, showLabel = true }: CourtSelectorProps) => {
     return (
       <div className={className}>
         {showLabel && <label className="text-sm font-medium mb-2 block">Quadra</label>}
-        <Skeleton className="h-10 w-full" />
+        <div className="h-10 w-full animate-pulse rounded-md bg-muted" />
       </div>
     );
   }
