@@ -35,7 +35,7 @@ export const useSelectedCourt = () => {
       if (firstActiveCourt) {
         setSelectedCourtId(firstActiveCourt.id);
         localStorage.setItem(storageKey, firstActiveCourt.id);
-      } else {
+      } else if (getOrCreateDefaultCourt) {
         // Se não há quadras ativas, criar Quadra 1 padrão
         getOrCreateDefaultCourt().then((defaultCourt) => {
           if (defaultCourt) {
@@ -46,7 +46,7 @@ export const useSelectedCourt = () => {
           console.error('Erro ao criar quadra padrão:', error);
         });
       }
-    } else {
+    } else if (getOrCreateDefaultCourt) {
       // Se não há quadras, criar Quadra 1 padrão
       getOrCreateDefaultCourt().then((defaultCourt) => {
         if (defaultCourt) {
@@ -57,8 +57,7 @@ export const useSelectedCourt = () => {
         console.error('Erro ao criar quadra padrão:', error);
       });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, courts.length]);
+  }, [user?.id, courts, getOrCreateDefaultCourt]);
 
   // Atualizar localStorage quando a quadra selecionada mudar
   const handleSetSelectedCourt = (courtId: string | null) => {

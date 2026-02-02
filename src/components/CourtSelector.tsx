@@ -14,15 +14,12 @@ interface CourtSelectorProps {
   showLabel?: boolean;
 }
 
-const CourtSelector = ({ className, showLabel = true }: CourtSelectorProps) => {
+function CourtSelector({ className, showLabel = true }: CourtSelectorProps) {
+  // Sempre chamar hooks na mesma ordem (regra do React)
   const { courts, isLoading } = useCourts();
   const { selectedCourtId, selectedCourt, setSelectedCourtId } = useSelectedCourt();
 
-  // Não renderizar durante SSR ou se não houver usuário
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
+  // Renderizar loading state
   if (isLoading) {
     return (
       <div className={className}>
@@ -32,6 +29,7 @@ const CourtSelector = ({ className, showLabel = true }: CourtSelectorProps) => {
     );
   }
 
+  // Não renderizar se não houver quadras
   if (!courts || courts.length === 0) {
     return null;
   }
@@ -73,6 +71,6 @@ const CourtSelector = ({ className, showLabel = true }: CourtSelectorProps) => {
       </Select>
     </div>
   );
-};
+}
 
 export default CourtSelector;
