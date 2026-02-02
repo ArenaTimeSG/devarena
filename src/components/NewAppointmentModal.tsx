@@ -389,8 +389,7 @@ const NewAppointmentModal = ({
     const selectedModality = modalities.find(m => m.id === formData.modality_id);
     const modalityValue = selectedModality?.valor || 0;
     
-    // Calcular valor proporcional baseado na duração
-    const durationMs = endDateTime.getTime() - startDateTime.getTime();
+    // Calcular valor proporcional baseado na duração (usar durationMs já calculado acima)
     const durationMinutes = Math.round(durationMs / (1000 * 60));
     let calculatedValue = modalityValue;
     
