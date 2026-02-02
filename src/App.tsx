@@ -18,8 +18,6 @@ import Appointments from "./pages/Appointments";
 import Financial from "./pages/Financial";
 import Settings from "./pages/Settings";
 import OnlineBooking from "./pages/OnlineBooking";
-import OnlineBookingDebug from "./pages/OnlineBookingDebug";
-import TestBooking from "./pages/TestBooking";
 import ClientLogin from "./pages/ClientLogin";
 import ClientRegister from "./pages/ClientRegister";
 import NotFound from "./pages/NotFound";
@@ -54,7 +52,6 @@ const AppContent = () => {
         <Route path="/agendar/:username" element={<OnlineBooking />} />
         <Route path="/booking/:username" element={<OnlineBooking />} />
         <Route path="/booking" element={<OnlineBooking />} />
-        <Route path="/booking-debug/:username" element={<OnlineBookingDebug />} />
         <Route path="/cliente/login" element={<ClientLogin />} />
         <Route path="/cliente/register" element={<ClientRegister />} />
         <Route path="/cliente/dashboard/:username" element={<ClientDashboard />} />

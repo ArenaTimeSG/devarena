@@ -1,9 +1,7 @@
-import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, User, Mail, Phone, DollarSign, CheckCircle, CreditCard, X } from 'lucide-react';
+import { Calendar, User, Mail, Phone, DollarSign, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import PaymentCheckoutTransparentComplete from './PaymentCheckoutTransparentComplete';
 
 interface Modalidade {
   id: string;
@@ -30,71 +28,16 @@ interface Reserva {
 interface ResumoReservaProps {
   reserva: Reserva;
   onConfirmar: () => void;
-  onConfirmarComPagamento?: () => void;
   isCreating?: boolean;
   autoConfirmada?: boolean;
-  paymentPolicy?: 'sem_pagamento' | 'obrigatorio' | 'opcional';
-  appointmentId?: string;
-  userId?: string;
-  mercadoPagoPublicKey?: string;
 }
 
 const ResumoReserva = ({ 
   reserva, 
   onConfirmar, 
-  onConfirmarComPagamento,
   isCreating = false,
-  autoConfirmada = false,
-  paymentPolicy = 'sem_pagamento',
-  appointmentId,
-  userId,
-  mercadoPagoPublicKey
+  autoConfirmada = false
 }: ResumoReservaProps) => {
-  const [showPayment, setShowPayment] = useState(false);
-  const [paymentChoice, setPaymentChoice] = useState<'pay' | 'no_pay' | null>(null);
-
-  // Debug logs
-  console.log('🔍 ResumoReserva - reserva.cliente:', reserva.cliente);
-  console.log('🔍 ResumoReserva - reserva.cliente.nome:', reserva.cliente.nome);
-  console.log('🔍 ResumoReserva - reserva.cliente.email:', reserva.cliente.email);
-
-
-
-  const handlePaymentSuccess = () => {
-    setShowPayment(false);
-    setPaymentChoice(null);
-    // Após pagamento bem-sucedido, apenas mostrar mensagem de processamento
-    // O agendamento será criado pelo webhook quando o pagamento for aprovado
-    console.log('✅ Payment successful - agendamento será criado pelo webhook');
-    // Não chamar onConfirmarComPagamento - o webhook criará o agendamento
-  };
-
-  const handlePaymentCancel = () => {
-    setShowPayment(false);
-    setPaymentChoice(null);
-  };
-
-  const handleConfirmWithPayment = async () => {
-    if (paymentPolicy === 'obrigatorio') {
-      // Para política obrigatória, primeiro processar pagamento (armazenar dados)
-      // Depois abrir o modal de pagamento
-      console.log('🔒 Payment required - processing payment first');
-      onConfirmarComPagamento?.(); // ✅ Chama função que armazena dados
-      setShowPayment(true);        // ✅ Depois abre modal
-    } else if (paymentPolicy === 'opcional') {
-      setPaymentChoice('pay');
-      setShowPayment(true);
-    } else {
-      onConfirmar();
-    }
-  };
-
-  const handleConfirmWithoutPayment = () => {
-    if (paymentPolicy === 'opcional') {
-      setPaymentChoice('no_pay');
-      onConfirmar();
-    }
-  };
   return (
     <div className="max-w-2xl mx-auto">
       {/* Resumo da Reserva */}
@@ -137,10 +80,7 @@ const ResumoReserva = ({
             <div className="flex-1">
               <p className="text-sm text-gray-500">Valor da Reserva</p>
               <p className="font-bold text-gray-800 text-2xl">R$ {reserva.modalidade?.valor}</p>
-              <p className="text-sm text-gray-600">
-                {paymentPolicy === 'sem_pagamento' && 'Pagamento no local'}
-                {paymentPolicy === 'opcional' && 'Pagamento opcional online'}
-              </p>
+              <p className="text-sm text-gray-600">Pagamento no local</p>
             </div>
           </div>
         </div>
@@ -184,181 +124,39 @@ const ResumoReserva = ({
 
       {/* Botões de Confirmação */}
       <div className="bg-white rounded-2xl shadow-lg p-6">
-        {paymentPolicy === 'sem_pagamento' && (
-          <>
-            <motion.button
-              onClick={onConfirmar}
-              disabled={isCreating}
-              whileHover={{ scale: isCreating ? 1 : 1.02 }}
-              whileTap={{ scale: isCreating ? 1 : 0.98 }}
-              className={`w-full py-4 px-6 rounded-lg font-semibold text-lg
-                       focus:outline-none focus:ring-2 focus:ring-offset-2
-                       transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2
-                       ${isCreating 
-                         ? 'bg-gray-400 text-white cursor-not-allowed' 
-                         : 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500'
-                       }`}
-            >
-              {isCreating ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Processando...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="w-5 h-5" />
-                  {autoConfirmada ? 'Confirmar Reserva' : 'Solicitar Reserva'}
-                </>
-              )}
-            </motion.button>
-            
-            <p className="text-center text-sm text-gray-500 mt-4">
-              {autoConfirmada 
-                ? 'Sua reserva será confirmada automaticamente'
-                : 'Sua solicitação será enviada para aprovação'
-              }
-            </p>
-          </>
-        )}
-
-        {paymentPolicy === 'obrigatorio' && (
-          <>
-            <motion.button
-              onClick={handleConfirmWithPayment}
-              disabled={isCreating}
-              whileHover={{ scale: isCreating ? 1 : 1.02 }}
-              whileTap={{ scale: isCreating ? 1 : 0.98 }}
-              className={`w-full py-4 px-6 rounded-lg font-semibold text-lg
-                       focus:outline-none focus:ring-2 focus:ring-offset-2
-                       transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2
-                       ${isCreating 
-                         ? 'bg-gray-400 text-white cursor-not-allowed' 
-                         : 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500'
-                       }`}
-            >
-              {isCreating ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Processando...
-                </>
-              ) : (
-                <>
-                  <CreditCard className="w-5 h-5" />
-                  Pagar e Confirmar Reserva
-                </>
-              )}
-            </motion.button>
-            
-            <p className="text-center text-sm text-gray-500 mt-4">
-              {paymentPolicy === 'opcional' ? 'Pagamento opcional para confirmar o agendamento' : 'Pagamento no local'}
-            </p>
-          </>
-        )}
-
-        {paymentPolicy === 'opcional' && (
-          <div className="space-y-3">
-            <motion.button
-              onClick={handleConfirmWithPayment}
-              disabled={isCreating}
-              whileHover={{ scale: isCreating ? 1 : 1.02 }}
-              whileTap={{ scale: isCreating ? 1 : 0.98 }}
-              className={`w-full py-4 px-6 rounded-lg font-semibold text-lg
-                       focus:outline-none focus:ring-2 focus:ring-offset-2
-                       transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2
-                       ${isCreating 
-                         ? 'bg-gray-400 text-white cursor-not-allowed' 
-                         : 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500'
-                       }`}
-            >
-              {isCreating ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Processando...
-                </>
-              ) : (
-                <>
-                  <CreditCard className="w-5 h-5" />
-                  Pagar e Confirmar
-                </>
-              )}
-            </motion.button>
-
-            <motion.button
-              onClick={handleConfirmWithoutPayment}
-              disabled={isCreating}
-              whileHover={{ scale: isCreating ? 1 : 1.02 }}
-              whileTap={{ scale: isCreating ? 1 : 0.98 }}
-              className={`w-full py-3 px-6 rounded-lg font-semibold text-base
-                       focus:outline-none focus:ring-2 focus:ring-offset-2
-                       transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2
-                       ${isCreating 
-                         ? 'bg-gray-400 text-white cursor-not-allowed' 
-                         : 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500'
-                       }`}
-            >
-              {isCreating ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Processando...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="w-4 h-4" />
-                  Confirmar sem Pagamento
-                </>
-              )}
-            </motion.button>
-            
-            <p className="text-center text-sm text-gray-500 mt-4">
-              Você pode escolher pagar agora ou no local
-            </p>
-          </div>
-        )}
+        <motion.button
+          onClick={onConfirmar}
+          disabled={isCreating}
+          whileHover={{ scale: isCreating ? 1 : 1.02 }}
+          whileTap={{ scale: isCreating ? 1 : 0.98 }}
+          className={`w-full py-4 px-6 rounded-lg font-semibold text-lg
+                   focus:outline-none focus:ring-2 focus:ring-offset-2
+                   transition-all duration-200 shadow-lg hover:shadow-xl flex items-center justify-center gap-2
+                   ${isCreating 
+                     ? 'bg-gray-400 text-white cursor-not-allowed' 
+                     : 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500'
+                   }`}
+        >
+          {isCreating ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              Processando...
+            </>
+          ) : (
+            <>
+              <CheckCircle className="w-5 h-5" />
+              {autoConfirmada ? 'Confirmar Reserva' : 'Solicitar Reserva'}
+            </>
+          )}
+        </motion.button>
+        
+        <p className="text-center text-sm text-gray-500 mt-4">
+          {autoConfirmada 
+            ? 'Sua reserva será confirmada automaticamente'
+            : 'Sua solicitação será enviada para aprovação'
+          }
+        </p>
       </div>
-
-      {/* Modal de Pagamento */}
-      {showPayment && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto relative">
-            {/* Botão de fechar */}
-            <button
-              onClick={handlePaymentCancel}
-              className="absolute top-4 right-4 z-10 p-2 hover:bg-gray-100 rounded-full transition-colors"
-            >
-              <X className="h-5 w-5 text-gray-500" />
-            </button>
-            
-            {(() => {
-              // Verificar se os dados do pagamento estão disponíveis
-              const paymentData = sessionStorage.getItem('paymentData');
-              if (!paymentData) {
-                console.log('⏳ Aguardando dados do pagamento...');
-                return (
-                  <div className="flex items-center justify-center p-8">
-                    <div className="text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                      <p className="text-gray-600">Preparando pagamento...</p>
-                    </div>
-                  </div>
-                );
-              }
-              
-              console.log('✅ Dados do pagamento disponíveis, renderizando checkout');
-              return (
-                <PaymentCheckoutTransparentComplete
-                  appointmentId={appointmentId || ''}
-                  userId={userId || ''}
-                  amount={reserva.modalidade?.valor || 0}
-                  modalityName={reserva.modalidade?.name || ''}
-                  clientName={reserva.cliente.nome}
-                  clientEmail={reserva.cliente.email}
-                  onPaymentSuccess={handlePaymentSuccess}
-                />
-              );
-            })()}
-          </div>
-        </div>
-      )}
     </div>
   );
 };
