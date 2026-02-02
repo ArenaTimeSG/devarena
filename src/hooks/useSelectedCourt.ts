@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useCourts } from './useCourts';
 import { useAuth } from './useAuth';
 
@@ -11,9 +11,9 @@ export const useSelectedCourt = () => {
   const { courts, getOrCreateDefaultCourt } = useCourts();
   const [selectedCourtId, setSelectedCourtId] = useState<string | null>(null);
 
-  // Carregar quadra selecionada do localStorage ao montar
-  useEffect(() => {
-    if (!user?.id) return;
+  // Memoizar a função para evitar recriações
+  const initializeCourt = useCallback(async () => {
+    if (!user?.id || typeof window === 'undefined') return;
 
     const storageKey = `selectedCourt_${user.id}`;
     const savedCourtId = localStorage.getItem(storageKey);
@@ -33,32 +33,44 @@ export const useSelectedCourt = () => {
       const firstActiveCourt = courts.find((c) => c.is_active);
       if (firstActiveCourt) {
         setSelectedCourtId(firstActiveCourt.id);
-        localStorage.setItem(storageKey, firstActiveCourt.id);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(storageKey, firstActiveCourt.id);
+        }
       } else {
         // Se não há quadras ativas, criar Quadra 1 padrão
-        getOrCreateDefaultCourt().then((defaultCourt) => {
-          if (defaultCourt) {
+        try {
+          const defaultCourt = await getOrCreateDefaultCourt();
+          if (defaultCourt && typeof window !== 'undefined') {
             setSelectedCourtId(defaultCourt.id);
             localStorage.setItem(storageKey, defaultCourt.id);
           }
-        });
+        } catch (error) {
+          console.error('Erro ao criar quadra padrão:', error);
+        }
       }
     } else {
       // Se não há quadras, criar Quadra 1 padrão
-      getOrCreateDefaultCourt().then((defaultCourt) => {
+      try {
+        const defaultCourt = await getOrCreateDefaultCourt();
         if (defaultCourt) {
           setSelectedCourtId(defaultCourt.id);
-          const storageKey = `selectedCourt_${user.id}`;
           localStorage.setItem(storageKey, defaultCourt.id);
         }
-      });
+      } catch (error) {
+        console.error('Erro ao criar quadra padrão:', error);
+      }
     }
   }, [user?.id, courts, getOrCreateDefaultCourt]);
+
+  // Carregar quadra selecionada do localStorage ao montar
+  useEffect(() => {
+    initializeCourt();
+  }, [initializeCourt]);
 
   // Atualizar localStorage quando a quadra selecionada mudar
   const handleSetSelectedCourt = (courtId: string | null) => {
     setSelectedCourtId(courtId);
-    if (user?.id) {
+    if (user?.id && typeof window !== 'undefined') {
       const storageKey = `selectedCourt_${user.id}`;
       if (courtId) {
         localStorage.setItem(storageKey, courtId);

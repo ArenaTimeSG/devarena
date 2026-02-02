@@ -18,6 +18,11 @@ const CourtSelector = ({ className, showLabel = true }: CourtSelectorProps) => {
   const { courts, isLoading } = useCourts();
   const { selectedCourtId, selectedCourt, setSelectedCourtId } = useSelectedCourt();
 
+  // Não renderizar durante SSR ou se não houver usuário
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
   if (isLoading) {
     return (
       <div className={className}>
@@ -27,7 +32,7 @@ const CourtSelector = ({ className, showLabel = true }: CourtSelectorProps) => {
     );
   }
 
-  if (courts.length === 0) {
+  if (!courts || courts.length === 0) {
     return null;
   }
 
