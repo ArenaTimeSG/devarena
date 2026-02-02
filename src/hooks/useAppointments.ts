@@ -144,7 +144,10 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
         // IMPORTANTE: Quando uma quadra específica está selecionada, mostrar APENAS agendamentos dessa quadra
         // Quando courtId é null/undefined, não aplicar filtro de quadra (mostrar todos)
         if (courtId) {
+          console.log('🔍 useAppointments - Filtrando por quadra:', courtId);
           query = query.eq('court_id', courtId);
+        } else {
+          console.log('🔍 useAppointments - Sem filtro de quadra (mostrando todos)');
         }
         
         const { data: pageData, error: pageError } = await query
@@ -294,11 +297,17 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
       };
 
       // Adicionar court_id se fornecido
+      // IMPORTANTE: Sempre associar agendamento à quadra selecionada
       if (appointmentData.court_id) {
         insertData.court_id = appointmentData.court_id;
+        console.log('🔍 useAppointments - Criando agendamento com court_id do appointmentData:', appointmentData.court_id);
       } else if (courtId) {
         // Se não fornecido mas há courtId no contexto, usar ele
         insertData.court_id = courtId;
+        console.log('🔍 useAppointments - Criando agendamento com court_id do contexto:', courtId);
+      } else {
+        console.warn('⚠️ useAppointments - Criando agendamento SEM court_id (será null)');
+        insertData.court_id = null;
       }
 
       const { data, error } = await supabase
