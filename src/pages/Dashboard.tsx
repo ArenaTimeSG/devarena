@@ -338,7 +338,11 @@ const Dashboard = () => {
       const appointmentDate = new Date(apt.date);
       
       // Normalizar a data do agendamento para comparar apenas a data (sem hora)
-      const aptDateOnly = new Date(appointmentDate.getFullYear(), appointmentDate.getMonth(), appointmentDate.getDate());
+      // Usar UTC para evitar problemas de timezone com datas do banco
+      const aptYear = appointmentDate.getUTCFullYear();
+      const aptMonth = appointmentDate.getUTCMonth();
+      const aptDay = appointmentDate.getUTCDate();
+      const aptDateOnly = new Date(aptYear, aptMonth, aptDay);
       
       // Verificar se o agendamento está dentro da semana
       const isInWeek = aptDateOnly >= weekStart && aptDateOnly <= weekEnd;

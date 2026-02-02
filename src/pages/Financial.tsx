@@ -133,8 +133,10 @@ const Financial = () => {
       // Filtrar agendamentos do mês selecionado
       const monthAppointments = appointments.filter(apt => {
         const aptDate = new Date(apt.date);
-        const aptYear = aptDate.getFullYear();
-        const aptMonth = aptDate.getMonth();
+        // Usar UTC para evitar problemas de timezone
+        // As datas no banco estão em UTC, então precisamos comparar em UTC também
+        const aptYear = aptDate.getUTCFullYear();
+        const aptMonth = aptDate.getUTCMonth();
         const selectedYearNum = selectedMonth.getFullYear();
         const selectedMonthNum = selectedMonth.getMonth();
         

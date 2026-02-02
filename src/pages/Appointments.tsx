@@ -77,9 +77,10 @@ const Appointments = () => {
   const getAppointmentsForSelectedMonth = () => {
     return appointments.filter(apt => {
       const appointmentDate = new Date(apt.date);
-      // Normalizar as datas para comparar apenas ano e mês
-      const aptYear = appointmentDate.getFullYear();
-      const aptMonth = appointmentDate.getMonth();
+      // Usar UTC para evitar problemas de timezone
+      // As datas no banco estão em UTC, então precisamos comparar em UTC também
+      const aptYear = appointmentDate.getUTCFullYear();
+      const aptMonth = appointmentDate.getUTCMonth();
       const selectedYear = selectedMonth.getFullYear();
       const selectedMonthNum = selectedMonth.getMonth();
       
