@@ -24,6 +24,7 @@ import { PaymentPolicySettings } from '@/components/booking-settings/PaymentPoli
 import { ConfiguracoesRegras } from '@/components/booking-settings/ConfiguracoesRegras';
 import { MercadoPagoSettings } from '@/components/booking-settings/MercadoPagoSettings';
 import { TimeFormatToggle } from '@/components/settings/TimeFormatToggle';
+import CourtsManagement from '@/components/CourtsManagement';
 
 
 const Settings = () => {
@@ -589,6 +590,7 @@ const Settings = () => {
               items={[
                 { value: "profile", label: "Perfil", icon: <User className="h-4 w-4" /> },
                 { value: "schedule", label: "Horários", icon: <Clock className="h-4 w-4" /> },
+                { value: "courts", label: "Quadras", icon: <Building2 className="h-4 w-4" /> },
                 { value: "modalities", label: "Modalidades", icon: <Calendar className="h-4 w-4" /> },
                 { value: "appointments", label: "Agendamentos", icon: <SettingsIcon className="h-4 w-4" /> },
                 { value: "online-booking", label: "Agendamento Online", icon: <Globe className="h-4 w-4" /> },
@@ -825,6 +827,21 @@ const Settings = () => {
               </Card>
             </TabsContent>
 
+            {/* Aba Quadras */}
+            <TabsContent value="courts" className="space-y-6">
+              <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-xl rounded-2xl overflow-hidden">
+                <CardHeader className="bg-gradient-to-r from-slate-50 to-green-50 border-b border-slate-200/60 p-6">
+                  <CardTitle className="text-xl font-bold text-slate-800">Gerenciar Quadras</CardTitle>
+                  <CardDescription className="mt-2">
+                    Gerencie múltiplas quadras com agendas totalmente isoladas. Cada quadra possui sua própria agenda independente.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <CourtsManagement />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
             {/* Aba Modalidades */}
             <TabsContent value="modalities" className="space-y-6">
               <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-xl rounded-2xl overflow-hidden">
@@ -850,34 +867,6 @@ const Settings = () => {
                     >
                       <Calendar className="h-4 w-4 mr-2" />
                       Gerenciar Modalidades
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-              
-              <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-xl rounded-2xl overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-slate-50 to-green-50 border-b border-slate-200/60 p-6">
-                  <CardTitle className="text-xl font-bold text-slate-800">Gerenciar Quadras</CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <div className="text-center space-y-4">
-                    <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center mx-auto">
-                      <Building2 className="h-8 w-8 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-slate-800 mb-2">
-                        Quadras Esportivas
-                      </h3>
-                      <p className="text-slate-600 mb-6">
-                        Gerencie múltiplas quadras com agendas totalmente isoladas
-                      </p>
-                    </div>
-                    <Button 
-                      onClick={() => navigate('/courts')}
-                      className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300"
-                    >
-                      <Building2 className="h-4 w-4 mr-2" />
-                      Gerenciar Quadras
                     </Button>
                   </div>
                 </CardContent>
