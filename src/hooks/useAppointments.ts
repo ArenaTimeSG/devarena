@@ -141,13 +141,10 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
           .eq('user_id', user.id);
         
         // Filtrar por quadra se especificado
-        // Se courtId for fornecido, mostrar apenas agendamentos dessa quadra
-        // Se courtId for null/undefined, mostrar apenas agendamentos sem quadra (court_id IS NULL)
-        if (courtId !== undefined && courtId !== null) {
+        // IMPORTANTE: Quando uma quadra específica está selecionada, mostrar APENAS agendamentos dessa quadra
+        // Quando courtId é null/undefined, não aplicar filtro de quadra (mostrar todos)
+        if (courtId) {
           query = query.eq('court_id', courtId);
-        } else {
-          // Quando nenhuma quadra específica está selecionada, mostrar apenas agendamentos sem quadra
-          query = query.is('court_id', null);
         }
         
         const { data: pageData, error: pageError } = await query
@@ -216,13 +213,9 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
       .eq('user_id', user.id);
     
     // Filtrar por quadra se especificado
-    // Se filterCourtId for fornecido, mostrar apenas agendamentos dessa quadra
-    // Se filterCourtId for null/undefined, mostrar apenas agendamentos sem quadra (court_id IS NULL)
-    if (filterCourtId !== undefined && filterCourtId !== null) {
+    // IMPORTANTE: Quando uma quadra específica está selecionada, mostrar APENAS agendamentos dessa quadra
+    if (filterCourtId) {
       query = query.eq('court_id', filterCourtId);
-    } else {
-      // Quando nenhuma quadra específica está selecionada, mostrar apenas agendamentos sem quadra
-      query = query.is('court_id', null);
     }
     
     const { data, error } = await query
