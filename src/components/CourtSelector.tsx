@@ -45,7 +45,7 @@ export function CourtSelector({ className, showLabel = true }: CourtSelectorProp
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Selecione uma quadra">
             <span className="flex items-center gap-2">
-              {selectedCourt && <Court className="h-4 w-4" />}
+              {selectedCourt && <Building2 className="h-4 w-4" />}
               {displayValue}
             </span>
           </SelectValue>
