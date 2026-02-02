@@ -17,6 +17,7 @@ export type Database = {
       appointments: {
         Row: {
           client_id: string
+          court_id: string | null
           created_at: string
           date: string
           end_time: string
@@ -30,6 +31,7 @@ export type Database = {
         }
         Insert: {
           client_id: string
+          court_id?: string | null
           created_at?: string
           date: string
           end_time: string
@@ -43,6 +45,7 @@ export type Database = {
         }
         Update: {
           client_id?: string
+          court_id?: string | null
           created_at?: string
           date?: string
           end_time?: string
@@ -63,6 +66,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "appointments_court_id_fkey"
+            columns: ["court_id"]
+            isOneToOne: false
+            referencedRelation: "courts"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "appointments_modality_id_fkey"
             columns: ["modality_id"]
             isOneToOne: false
@@ -76,6 +86,44 @@ export type Database = {
             referencedRelation: "recurrences"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      courts: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          description: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          description?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          description?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
         ]
       }
       clients: {

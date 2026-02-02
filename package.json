@@ -9,7 +9,9 @@
     "build:prod": "vite build --config vite.config.prod.ts",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "migrate:courts": "node scripts/execute-courts-migration.mjs",
+    "verify:migration": "node scripts/execute-courts-migration.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

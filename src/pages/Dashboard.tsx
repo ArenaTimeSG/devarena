@@ -10,6 +10,8 @@ import { useWorkingHours } from '@/hooks/useWorkingHours';
 import { useSettingsSync } from '@/hooks/useSettingsSync';
 import { useToast } from '@/hooks/use-toast';
 import { useAppointments } from '@/hooks/useAppointments';
+import { useSelectedCourt } from '@/hooks/useSelectedCourt';
+import CourtSelector from '@/components/CourtSelector';
 import { formatCurrency } from '@/utils/currency';
 import { supabase as supabaseClient } from '@/integrations/supabase/client';
 import { Calendar, Plus, Users, DollarSign, Activity, LogOut, FileText, Settings, ChevronLeft, ChevronRight, User, ChevronDown, Shield, Mail, Phone, Clock, TrendingUp, CheckCircle, AlertCircle, AlertTriangle, Repeat } from 'lucide-react';
@@ -64,7 +66,10 @@ const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { appointments, getFinancialSummary, isLoading: appointmentsLoading, refetch } = useAppointments();
+  const { selectedCourtId } = useSelectedCourt();
+  const { appointments, getFinancialSummary, isLoading: appointmentsLoading, refetch } = useAppointments({ 
+    courtId: selectedCourtId 
+  });
   
   const navigate = useNavigate();
   const [currentWeek, setCurrentWeek] = useState(new Date());
@@ -902,6 +907,9 @@ const Dashboard = () => {
           transition={{ duration: 0.5 }}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+            <div className="flex items-center justify-between mb-4">
+              <CourtSelector className="max-w-xs" />
+            </div>
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">

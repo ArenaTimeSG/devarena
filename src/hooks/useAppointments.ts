@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 export interface AppointmentWithModality {
   id: string;
   client_id: string;
+  court_id: string | null;
   date: string;
   end_time: string;
   status: 'a_cobrar' | 'pago' | 'cancelado' | 'agendado';
@@ -34,6 +35,7 @@ export interface CreateAppointmentData {
   date: string;
   end_time: string;
   modality_id: string;
+  court_id?: string | null;
   status?: 'a_cobrar' | 'pago' | 'cancelado' | 'agendado';
   recurrence_id?: string;
   booking_source?: 'manual' | 'online';
@@ -54,11 +56,16 @@ export interface UpdateAppointmentData {
 const clientsCache = new Map<string, Map<string, any>>();
 const modalitiesCache = new Map<string, Map<string, any>>();
 
-export const useAppointments = () => {
+export interface UseAppointmentsOptions {
+  courtId?: string | null; // Se fornecido, filtra por quadra específica
+}
+
+export const useAppointments = (options?: UseAppointmentsOptions) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
+  const { courtId } = options || {};
 
   // Função otimizada para buscar dados relacionados
   const fetchRelatedData = useCallback(async (appointments: any[]) => {
@@ -111,7 +118,7 @@ export const useAppointments = () => {
     error: queryError,
     refetch,
   } = useQuery({
-    queryKey: ['appointments', user?.id],
+    queryKey: ['appointments', user?.id, courtId || 'all'],
     staleTime: 1000 * 60, // 1 minuto (aumentado para reduzir requisições)
     gcTime: 1000 * 60 * 5, // 5 minutos de cache (aumentado)
     queryFn: async (): Promise<AppointmentWithModality[]> => {
@@ -128,10 +135,17 @@ export const useAppointments = () => {
       let error: any = null;
 
       while (hasMore) {
-        const { data: pageData, error: pageError } = await supabase
+        let query = supabase
           .from('appointments')
           .select('*')
-          .eq('user_id', user.id)
+          .eq('user_id', user.id);
+        
+        // Filtrar por quadra se especificado
+        if (courtId) {
+          query = query.eq('court_id', courtId);
+        }
+        
+        const { data: pageData, error: pageError } = await query
           .order('date', { ascending: false })
           .range(from, from + pageSize - 1);
 
@@ -186,15 +200,22 @@ export const useAppointments = () => {
   });
 
   // Query otimizada para buscar agendamentos por período
-  const getAppointmentsByPeriod = useCallback(async (startDate: string, endDate: string) => {
+  const getAppointmentsByPeriod = useCallback(async (startDate: string, endDate: string, filterCourtId?: string | null) => {
     if (!user?.id) {
       throw new Error('Usuário não autenticado');
     }
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('appointments')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', user.id);
+    
+    // Filtrar por quadra se especificado
+    if (filterCourtId) {
+      query = query.eq('court_id', filterCourtId);
+    }
+    
+    const { data, error } = await query
       .gte('date', startDate)
       .lte('date', endDate)
       .order('date');
@@ -221,7 +242,7 @@ export const useAppointments = () => {
         } : undefined
       };
     });
-  }, [user?.id, fetchRelatedData]);
+  }, [user?.id, courtId, fetchRelatedData]);
 
   // Mutation otimizada para criar agendamento
   const createAppointmentMutation = useMutation({
@@ -256,20 +277,30 @@ export const useAppointments = () => {
         }
       }
 
+      const insertData: any = {
+        client_id: appointmentData.client_id,
+        date: appointmentData.date,
+        end_time: appointmentData.end_time,
+        modality_id: appointmentData.modality_id,
+        valor_total: appointmentData.is_cortesia ? 0 : (appointmentData.customValue !== null ? appointmentData.customValue : valorTotal),
+        is_cortesia: appointmentData.is_cortesia || false,
+        status: appointmentData.status || 'agendado',
+        recurrence_id: appointmentData.recurrence_id,
+        booking_source: appointmentData.booking_source || 'manual',
+        user_id: user.id
+      };
+
+      // Adicionar court_id se fornecido
+      if (appointmentData.court_id) {
+        insertData.court_id = appointmentData.court_id;
+      } else if (courtId) {
+        // Se não fornecido mas há courtId no contexto, usar ele
+        insertData.court_id = courtId;
+      }
+
       const { data, error } = await supabase
         .from('appointments')
-        .insert({
-          client_id: appointmentData.client_id,
-          date: appointmentData.date,
-          end_time: appointmentData.end_time,
-          modality_id: appointmentData.modality_id,
-          valor_total: appointmentData.is_cortesia ? 0 : (appointmentData.customValue !== null ? appointmentData.customValue : valorTotal),
-          is_cortesia: appointmentData.is_cortesia || false,
-          status: appointmentData.status || 'agendado',
-          recurrence_id: appointmentData.recurrence_id,
-          booking_source: appointmentData.booking_source || 'manual',
-          user_id: user.id
-        })
+        .insert(insertData)
         .select('*')
         .single();
 

@@ -17,6 +17,7 @@ import NewAppointment from "./pages/NewAppointment";
 import Appointments from "./pages/Appointments";
 import Financial from "./pages/Financial";
 import Settings from "./pages/Settings";
+import Courts from "./pages/Courts";
 import OnlineBooking from "./pages/OnlineBooking";
 import ClientLogin from "./pages/ClientLogin";
 import ClientRegister from "./pages/ClientRegister";
@@ -48,6 +49,7 @@ const AppContent = () => {
         <Route path="/appointments/new" element={<NewAppointment />} />
         <Route path="/financial" element={<Financial />} />
         <Route path="/settings" element={<Settings />} />
+        <Route path="/courts" element={<Courts />} />
 
         <Route path="/agendar/:username" element={<OnlineBooking />} />
         <Route path="/booking/:username" element={<OnlineBooking />} />

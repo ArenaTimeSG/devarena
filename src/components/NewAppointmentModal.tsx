@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useWorkingHours } from '@/hooks/useWorkingHours';
 import { useModalities } from '@/hooks/useModalities';
 import { useAppointments } from '@/hooks/useAppointments';
+import { useSelectedCourt } from '@/hooks/useSelectedCourt';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { ClientSearchDropdown } from '@/components/ClientSearchDropdown';
@@ -48,7 +49,8 @@ const NewAppointmentModal = ({
   const { user } = useAuth();
   const { getAvailableHoursForDay, isDayEnabled } = useWorkingHours();
   const { modalities = [] } = useModalities();
-  const { createAppointment } = useAppointments();
+  const { selectedCourtId } = useSelectedCourt();
+  const { createAppointment } = useAppointments({ courtId: selectedCourtId });
   const queryClient = useQueryClient();
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -279,7 +281,7 @@ const NewAppointmentModal = ({
         console.log('🔍 NewAppointmentModal - Recorrência criada:', recurrenceData);
 
         // Criar agendamentos recorrentes com o recurrence_id correto
-        const appointments = generateRecurringAppointments(formData, startDateTime, endDateTime, recurrenceData.id, user.id);
+        const appointments = generateRecurringAppointments(formData, startDateTime, endDateTime, recurrenceData.id, user.id, selectedCourtId);
         
         console.log('🔍 NewAppointmentModal - Criando agendamentos recorrentes:', {
           total: appointments.length,
@@ -322,6 +324,7 @@ const NewAppointmentModal = ({
       } else {
         // Criar agendamento único usando o novo hook
         await createAppointment({
+          court_id: selectedCourtId || null,
           client_id: formData.client_id,
           modality_id: formData.modality_id,
           date: startDateTime.toISOString(),
@@ -368,7 +371,8 @@ const NewAppointmentModal = ({
     startDateTime: Date, 
     endDateTime: Date,
     recurrenceId: string, 
-    userId: string
+    userId: string,
+    courtId?: string | null
   ) => {
     const appointments = [];
     let currentDate = new Date(startDateTime);
@@ -415,7 +419,8 @@ const NewAppointmentModal = ({
       status: 'agendado' as const,
       recurrence_id: recurrenceId,
       booking_source: 'manual' as const,
-      user_id: userId
+      user_id: userId,
+      court_id: courtId || null
     };
 
     while (count < maxRepetitions) {
