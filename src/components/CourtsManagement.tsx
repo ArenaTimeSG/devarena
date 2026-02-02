@@ -25,7 +25,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { Plus, Edit, Trash2, Court } from 'lucide-react';
+import { Plus, Edit, Trash2, Building2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const CourtsManagement = () => {
@@ -198,7 +198,7 @@ const CourtsManagement = () => {
         {courts.length === 0 ? (
           <Card className="col-span-full">
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <Court className="h-12 w-12 text-muted-foreground mb-4" />
+              <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground text-center">
                 Nenhuma quadra cadastrada. Crie sua primeira quadra para começar.
               </p>
@@ -211,7 +211,7 @@ const CourtsManagement = () => {
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <CardTitle className="flex items-center gap-2">
-                      <Court className="h-5 w-5" />
+                      <Building2 className="h-5 w-5" />
                       {court.name}
                     </CardTitle>
                     {court.description && (
