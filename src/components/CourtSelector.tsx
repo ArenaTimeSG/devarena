@@ -7,19 +7,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Court } from 'lucide-react';
+import { Building2 } from 'lucide-react';
 
-export interface CourtSelectorProps {
+type CourtSelectorProps = {
   className?: string;
   showLabel?: boolean;
-}
+};
 
 export function CourtSelector({ className, showLabel = true }: CourtSelectorProps) {
-  // Sempre chamar hooks na mesma ordem (regra do React)
   const { courts, isLoading } = useCourts();
   const { selectedCourtId, selectedCourt, setSelectedCourtId } = useSelectedCourt();
 
-  // Renderizar loading state
   if (isLoading) {
     return (
       <div className={className}>
@@ -29,30 +27,27 @@ export function CourtSelector({ className, showLabel = true }: CourtSelectorProp
     );
   }
 
-  // Não renderizar se não houver quadras
   if (!courts || courts.length === 0) {
     return null;
   }
+
+  const displayValue = selectedCourt ? selectedCourt.name : 'Selecione uma quadra';
 
   return (
     <div className={className}>
       {showLabel && (
         <label className="text-sm font-medium mb-2 block flex items-center gap-2">
-          <Court className="h-4 w-4" />
+          <Building2 className="h-4 w-4" />
           Quadra
         </label>
       )}
       <Select value={selectedCourtId || ''} onValueChange={setSelectedCourtId}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Selecione uma quadra">
-            {selectedCourt ? (
-              <span className="flex items-center gap-2">
-                <Court className="h-4 w-4" />
-                {selectedCourt.name}
-              </span>
-            ) : (
-              'Selecione uma quadra'
-            )}
+            <span className="flex items-center gap-2">
+              {selectedCourt && <Court className="h-4 w-4" />}
+              {displayValue}
+            </span>
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
