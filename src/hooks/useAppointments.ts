@@ -119,11 +119,36 @@ export const useAppointments = () => {
         throw new Error('Usuário não autenticado');
       }
 
-      const { data, error } = await supabase
-        .from('appointments')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('date', { ascending: false });
+      // Buscar todos os agendamentos (Supabase tem limite padrão de 1000 linhas)
+      // Implementar paginação para buscar todos os registros
+      let allAppointments: any[] = [];
+      let from = 0;
+      const pageSize = 1000;
+      let hasMore = true;
+
+      while (hasMore) {
+        const { data: pageData, error } = await supabase
+          .from('appointments')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('date', { ascending: false })
+          .range(from, from + pageSize - 1);
+
+        if (error) {
+          console.error('❌ Erro ao buscar agendamentos:', error);
+          throw error;
+        }
+
+        if (pageData && pageData.length > 0) {
+          allAppointments = [...allAppointments, ...pageData];
+          from += pageSize;
+          hasMore = pageData.length === pageSize; // Se retornou menos que pageSize, não há mais dados
+        } else {
+          hasMore = false;
+        }
+      }
+
+      const data = allAppointments;
 
       if (error) {
         console.error('❌ Erro ao buscar agendamentos:', error);

@@ -81,8 +81,10 @@ const Appointments = () => {
       // As datas no banco estão em UTC, então precisamos comparar em UTC também
       const aptYear = appointmentDate.getUTCFullYear();
       const aptMonth = appointmentDate.getUTCMonth();
+      // selectedMonth é uma data local, mas precisamos comparar com UTC
+      // Criar uma data UTC equivalente ao mês selecionado
       const selectedYear = selectedMonth.getFullYear();
-      const selectedMonthNum = selectedMonth.getMonth();
+      const selectedMonthNum = selectedMonth.getMonth(); // 0-11 (janeiro = 0)
       
       return aptYear === selectedYear && aptMonth === selectedMonthNum;
     });
@@ -94,7 +96,7 @@ const Appointments = () => {
     // Filtro por termo de busca (nome do cliente)
     if (searchTerm) {
       filtered = filtered.filter(apt => 
-        apt.client.name.toLowerCase().includes(searchTerm.toLowerCase())
+        apt.client?.name?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
