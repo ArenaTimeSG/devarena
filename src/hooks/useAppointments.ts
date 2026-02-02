@@ -125,27 +125,41 @@ export const useAppointments = () => {
       let from = 0;
       const pageSize = 1000;
       let hasMore = true;
+      let error: any = null;
 
       while (hasMore) {
-        const { data: pageData, error } = await supabase
+        const { data: pageData, error: pageError } = await supabase
           .from('appointments')
           .select('*')
           .eq('user_id', user.id)
           .order('date', { ascending: false })
           .range(from, from + pageSize - 1);
 
-        if (error) {
-          console.error('❌ Erro ao buscar agendamentos:', error);
-          throw error;
+        if (pageError) {
+          console.error('❌ Erro ao buscar agendamentos:', pageError);
+          error = pageError;
+          break;
         }
 
         if (pageData && pageData.length > 0) {
           allAppointments = [...allAppointments, ...pageData];
           from += pageSize;
-          hasMore = pageData.length === pageSize; // Se retornou menos que pageSize, não há mais dados
+          // Se retornou menos que pageSize, não há mais dados
+          hasMore = pageData.length === pageSize;
         } else {
+          // Se não retornou dados, não há mais páginas
           hasMore = false;
         }
+        
+        // Proteção contra loop infinito (máximo 10 páginas = 10.000 registros)
+        if (from >= pageSize * 10) {
+          console.warn('⚠️ Limite de paginação atingido (10.000 registros)');
+          hasMore = false;
+        }
+      }
+
+      if (error) {
+        throw error;
       }
 
       const data = allAppointments;
