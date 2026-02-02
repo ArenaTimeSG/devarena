@@ -9,12 +9,12 @@ import {
 } from '@/components/ui/select';
 import { Court } from 'lucide-react';
 
-interface CourtSelectorProps {
+export interface CourtSelectorProps {
   className?: string;
   showLabel?: boolean;
 }
 
-function CourtSelector({ className, showLabel = true }: CourtSelectorProps) {
+export function CourtSelector({ className, showLabel = true }: CourtSelectorProps) {
   // Sempre chamar hooks na mesma ordem (regra do React)
   const { courts, isLoading } = useCourts();
   const { selectedCourtId, selectedCourt, setSelectedCourtId } = useSelectedCourt();
@@ -72,5 +72,3 @@ function CourtSelector({ className, showLabel = true }: CourtSelectorProps) {
     </div>
   );
 }
-
-export default CourtSelector;

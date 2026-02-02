@@ -11,7 +11,7 @@ import { useSettingsSync } from '@/hooks/useSettingsSync';
 import { useToast } from '@/hooks/use-toast';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useSelectedCourt } from '@/hooks/useSelectedCourt';
-import CourtSelector from '@/components/CourtSelector';
+import { CourtSelector } from '@/components/CourtSelector';
 import { formatCurrency } from '@/utils/currency';
 import { supabase as supabaseClient } from '@/integrations/supabase/client';
 import { Calendar, Plus, Users, DollarSign, Activity, LogOut, FileText, Settings, ChevronLeft, ChevronRight, User, ChevronDown, Shield, Mail, Phone, Clock, TrendingUp, CheckCircle, AlertCircle, AlertTriangle, Repeat } from 'lucide-react';
