@@ -829,17 +829,7 @@ const Settings = () => {
 
             {/* Aba Quadras */}
             <TabsContent value="courts" className="space-y-6">
-              <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-xl rounded-2xl overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-slate-50 to-green-50 border-b border-slate-200/60 p-6">
-                  <CardTitle className="text-xl font-bold text-slate-800">Gerenciar Quadras</CardTitle>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Gerencie múltiplas quadras com agendas totalmente isoladas. Cada quadra possui sua própria agenda independente.
-                  </p>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <CourtsManagement />
-                </CardContent>
-              </Card>
+              <CourtsManagement />
             </TabsContent>
 
             {/* Aba Modalidades */}
