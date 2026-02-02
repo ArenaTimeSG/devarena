@@ -150,13 +150,6 @@ export const useAppointments = () => {
 
       const data = allAppointments;
 
-      if (error) {
-        console.error('❌ Erro ao buscar agendamentos:', error);
-        throw error;
-      }
-
-
-
       // Buscar dados relacionados de forma otimizada
       const { clientsMap, modalitiesMap } = await fetchRelatedData(data || []);
 
