@@ -92,6 +92,8 @@ export const useCourts = () => {
         description: 'A quadra foi criada com sucesso.',
       });
       queryClient.invalidateQueries({ queryKey: ['courts', user?.id] });
+      // Invalidar também queries de agendamentos para garantir que o filtro seja aplicado
+      queryClient.invalidateQueries({ queryKey: ['appointments'], exact: false });
     },
     onError: (error: any) => {
       toast({
@@ -130,7 +132,8 @@ export const useCourts = () => {
         description: 'A quadra foi atualizada com sucesso.',
       });
       queryClient.invalidateQueries({ queryKey: ['courts', user?.id] });
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      // Invalidar queries de agendamentos para garantir que o filtro seja aplicado
+      queryClient.invalidateQueries({ queryKey: ['appointments'], exact: false });
     },
     onError: (error: any) => {
       toast({
@@ -183,6 +186,8 @@ export const useCourts = () => {
         description: 'A quadra foi excluída com sucesso.',
       });
       queryClient.invalidateQueries({ queryKey: ['courts', user?.id] });
+      // Invalidar queries de agendamentos para garantir que o filtro seja aplicado
+      queryClient.invalidateQueries({ queryKey: ['appointments'], exact: false });
     },
     onError: (error: any) => {
       toast({
