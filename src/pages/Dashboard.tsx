@@ -918,10 +918,12 @@ const Dashboard = () => {
                   <p className="text-slate-600 text-xs sm:text-sm font-medium hidden sm:block">Dashboard de Gestão</p>
                 </div>
                 
-                {/* Seletor de Quadra integrado */}
-                <div className="hidden md:block border-l border-slate-200 pl-4">
-                  <CourtSelector className="max-w-xs" showLabel={false} />
-                </div>
+                {/* Seletor de Quadra integrado - apenas na visualização semanal */}
+                {viewMode === 'weekly' && (
+                  <div className="hidden md:block border-l border-slate-200 pl-4">
+                    <CourtSelector className="max-w-xs" showLabel={false} />
+                  </div>
+                )}
               </div>
               
               {/* Lado direito: Botões de ação */}
@@ -958,10 +960,12 @@ const Dashboard = () => {
               </div>
             </div>
             
-            {/* Seletor de Quadra para mobile/tablet */}
-            <div className="md:hidden pt-2 border-t border-slate-200">
-              <CourtSelector className="w-full" />
-            </div>
+            {/* Seletor de Quadra para mobile/tablet - apenas na visualização semanal */}
+            {viewMode === 'weekly' && (
+              <div className="md:hidden pt-2 border-t border-slate-200">
+                <CourtSelector className="w-full" />
+              </div>
+            )}
           </div>
         </motion.header>
 
