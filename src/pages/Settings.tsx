@@ -67,7 +67,6 @@ const Settings = () => {
     sunday: { enabled: false, start: '08:00', end: '18:00' }
   });
 
-  const [defaultInterval, setDefaultInterval] = useState(60);
   const [notifications, setNotifications] = useState({
     email: true,
     push: false,
@@ -125,10 +124,6 @@ const Settings = () => {
           sunday: settings.working_hours.sunday || { enabled: false, start: '08:00', end: '18:00' }
         };
         setWorkingHours(loadedHours);
-      }
-
-      if (settings.default_interval) {
-        setDefaultInterval(settings.default_interval);
       }
 
       if (settings.notifications_enabled) {
@@ -250,30 +245,6 @@ const Settings = () => {
       toast({
         title: 'Erro ao salvar',
         description: 'Não foi possível salvar a configuração.',
-        variant: 'destructive',
-      });
-    }
-  };
-
-  // Função para atualizar intervalo padrão
-  const handleIntervalChange = async (value: string) => {
-    const interval = parseInt(value);
-    setDefaultInterval(interval);
-
-    try {
-      await updateSettings({ default_interval: interval });
-      // Garantir que permaneça na aba de agendamentos
-      setActiveTab('appointments');
-      toast({
-        title: 'Salvo',
-        description: 'Intervalo padrão atualizado.',
-        duration: 2000,
-      });
-    } catch (error) {
-      console.error('Erro ao salvar intervalo:', error);
-      toast({
-        title: 'Erro ao salvar',
-        description: 'Não foi possível salvar o intervalo.',
         variant: 'destructive',
       });
     }
@@ -591,7 +562,6 @@ const Settings = () => {
                 { value: "schedule", label: "Horários", icon: <Clock className="h-4 w-4" /> },
                 { value: "courts", label: "Quadras", icon: <Building2 className="h-4 w-4" /> },
                 { value: "modalities", label: "Modalidades", icon: <Calendar className="h-4 w-4" /> },
-                { value: "appointments", label: "Agendamentos", icon: <SettingsIcon className="h-4 w-4" /> },
                 { value: "online-booking", label: "Agendamento Online", icon: <Globe className="h-4 w-4" /> },
                 { value: "notifications", label: "Notificações", icon: <Bell className="h-4 w-4" /> },
                 { value: "security", label: "Segurança", icon: <Shield className="h-4 w-4" /> },
@@ -723,37 +693,7 @@ const Settings = () => {
               </Card>
             </TabsContent>
 
-            {/* Aba Agendamentos */}
-            <TabsContent value="appointments" className="space-y-6">
-              <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-xl rounded-2xl overflow-hidden">
-                <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 border-b border-slate-200/60 p-6">
-                  <CardTitle className="text-xl font-bold text-slate-800">Configurações de Agendamentos</CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-slate-700 font-medium">Intervalo Padrão (minutos)</Label>
-                    <Select value={defaultInterval.toString()} onValueChange={handleIntervalChange}>
-                      <SelectTrigger className="border-slate-200 focus:border-blue-300">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="15">15 minutos</SelectItem>
-                        <SelectItem value="30">30 minutos</SelectItem>
-                        <SelectItem value="45">45 minutos</SelectItem>
-                        <SelectItem value="60">1 hora</SelectItem>
-                        <SelectItem value="90">1 hora e 30 minutos</SelectItem>
-                        <SelectItem value="120">2 horas</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <p className="text-sm text-slate-600">
-                      Intervalo padrão para novos agendamentos
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-                         {/* Aba Agendamento Online */}
+            {/* Aba Agendamento Online */}
              <TabsContent value="online-booking" className="space-y-6">
                <div className="grid gap-6">
                  <ToggleAgendamento 

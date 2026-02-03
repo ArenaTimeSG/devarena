@@ -199,11 +199,6 @@ export const useSettings = () => {
     await updateSettings({ modalities_colors });
   }, [updateSettings]);
 
-  // Função para atualizar intervalo padrão (memoizada)
-  const updateDefaultInterval = useCallback(async (default_interval: number) => {
-    await updateSettings({ default_interval });
-  }, [updateSettings]);
-
   // Função para atualizar notificações (memoizada)
   const updateNotifications = useCallback(async (notifications_enabled: Settings['notifications_enabled']) => {
     await updateSettings({ notifications_enabled });
@@ -352,7 +347,6 @@ export const useSettings = () => {
     updateSettings,
     updateModalitiesEnabled,
     updateModalitiesColors,
-    updateDefaultInterval,
     updateNotifications,
     updatePersonalData,
     updateTheme,
@@ -380,7 +374,6 @@ export const useSettings = () => {
     updateSettings,
     updateModalitiesEnabled,
     updateModalitiesColors,
-    updateDefaultInterval,
     updateNotifications,
     updatePersonalData,
     updateTheme,
