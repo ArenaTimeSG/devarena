@@ -906,16 +906,26 @@ const Dashboard = () => {
           animate={{ y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
-            <div className="flex items-center justify-between mb-4">
-              <div className="space-y-1">
-                <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  ArenaTime
-                </h1>
-                <p className="text-slate-600 text-xs sm:text-sm font-medium hidden sm:block">Dashboard de Gestão</p>
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+            {/* Primeira linha: Título e Botões */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+              {/* Lado esquerdo: Título e Subtítulo */}
+              <div className="flex items-center gap-4">
+                <div className="space-y-1">
+                  <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                    ArenaTime
+                  </h1>
+                  <p className="text-slate-600 text-xs sm:text-sm font-medium hidden sm:block">Dashboard de Gestão</p>
+                </div>
+                
+                {/* Seletor de Quadra integrado */}
+                <div className="hidden md:block border-l border-slate-200 pl-4">
+                  <CourtSelector className="max-w-xs" showLabel={false} />
+                </div>
               </div>
               
-              <div className="flex items-center gap-2 sm:gap-4">
+              {/* Lado direito: Botões de ação */}
+              <div className="flex items-center gap-2 sm:gap-3">
                 {viewMode === 'weekly' && (
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <Button
@@ -948,9 +958,9 @@ const Dashboard = () => {
               </div>
             </div>
             
-            {/* Seletor de Quadra */}
-            <div className="mt-4">
-              <CourtSelector className="max-w-xs" />
+            {/* Seletor de Quadra para mobile/tablet */}
+            <div className="md:hidden pt-2 border-t border-slate-200">
+              <CourtSelector className="w-full" />
             </div>
           </div>
         </motion.header>
