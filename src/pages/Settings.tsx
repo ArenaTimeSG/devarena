@@ -23,7 +23,6 @@ import { LinkCompartilhamento } from '@/components/booking-settings/LinkComparti
 import { PaymentPolicySettings } from '@/components/booking-settings/PaymentPolicySettings';
 import { ConfiguracoesRegras } from '@/components/booking-settings/ConfiguracoesRegras';
 import { MercadoPagoSettings } from '@/components/booking-settings/MercadoPagoSettings';
-import { TimeFormatToggle } from '@/components/settings/TimeFormatToggle';
 import CourtsManagement from '@/components/CourtsManagement';
 
 
@@ -32,7 +31,7 @@ const Settings = () => {
   const { profile } = useUserProfile();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { settings, isLoading: settingsLoading, error, updateSettings, updateTimeFormatInterval } = useSettings();
+  const { settings, isLoading: settingsLoading, error, updateSettings } = useSettings();
   
   // Hook para agendamentos de clientes
   const { agendamentos, isLoading: bookingsLoading, confirmBooking, cancelBooking, markCompleted } = useClientBookings(user?.id);
@@ -722,12 +721,6 @@ const Settings = () => {
                   </div>
                 </CardContent>
               </Card>
-              
-              {/* Formato de Horários */}
-              <TimeFormatToggle 
-                timeFormatInterval={settings?.time_format_interval || 60}
-                onUpdate={updateTimeFormatInterval}
-              />
             </TabsContent>
 
             {/* Aba Agendamentos */}

@@ -204,12 +204,6 @@ export const useSettings = () => {
     await updateSettings({ default_interval });
   }, [updateSettings]);
 
-  // Função para atualizar formato de horário (memoizada)
-  const updateTimeFormatInterval = useCallback(async (time_format_interval: 30 | 60) => {
-    console.log('⏰ Atualizando formato de horário:', time_format_interval);
-    await updateSettings({ time_format_interval });
-  }, [updateSettings]);
-
   // Função para atualizar notificações (memoizada)
   const updateNotifications = useCallback(async (notifications_enabled: Settings['notifications_enabled']) => {
     await updateSettings({ notifications_enabled });
@@ -359,7 +353,6 @@ export const useSettings = () => {
     updateModalitiesEnabled,
     updateModalitiesColors,
     updateDefaultInterval,
-    updateTimeFormatInterval,
     updateNotifications,
     updatePersonalData,
     updateTheme,
@@ -388,7 +381,6 @@ export const useSettings = () => {
     updateModalitiesEnabled,
     updateModalitiesColors,
     updateDefaultInterval,
-    updateTimeFormatInterval,
     updateNotifications,
     updatePersonalData,
     updateTheme,
