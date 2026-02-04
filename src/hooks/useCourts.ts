@@ -198,24 +198,30 @@ export const useCourts = () => {
     },
   });
 
-  // Função para obter a quadra padrão (Quadra 1) ou criar se não existir
+  // Função para obter a primeira quadra ativa ou criar Quadra 1 se não existir nenhuma
   const getOrCreateDefaultCourt = async (): Promise<Court | null> => {
     if (!user?.id) return null;
 
-    // Buscar Quadra 1
-    const { data: defaultCourt, error: fetchError } = await supabase
+    // Primeiro, buscar qualquer quadra ativa do usuário
+    const { data: activeCourts, error: fetchError } = await supabase
       .from('courts')
       .select('*')
       .eq('user_id', user.id)
-      .eq('name', 'Quadra 1')
       .eq('is_active', true)
-      .single();
+      .order('created_at', { ascending: true })
+      .limit(1);
 
-    if (defaultCourt) {
-      return defaultCourt;
+    if (fetchError) {
+      console.error('❌ Erro ao buscar quadras:', fetchError);
+      return null;
     }
 
-    // Se não encontrou, criar
+    // Se encontrou alguma quadra ativa, retornar a primeira
+    if (activeCourts && activeCourts.length > 0) {
+      return activeCourts[0];
+    }
+
+    // Se não encontrou nenhuma quadra ativa, criar Quadra 1 padrão
     const { data: newCourt, error: createError } = await supabase
       .from('courts')
       .insert({
