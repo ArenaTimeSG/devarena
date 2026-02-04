@@ -41,7 +41,13 @@ export function CourtSelector({ className, showLabel = true }: CourtSelectorProp
           Quadra
         </label>
       )}
-      <Select value={selectedCourtId || ''} onValueChange={setSelectedCourtId}>
+      <Select 
+        value={selectedCourtId || ''} 
+        onValueChange={(value) => {
+          console.log('🎯 CourtSelector - Selecionando quadra:', value);
+          setSelectedCourtId(value || null);
+        }}
+      >
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Selecione uma quadra">
             <span className="flex items-center gap-2">

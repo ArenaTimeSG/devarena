@@ -11,10 +11,13 @@ export const useSelectedCourt = () => {
   const { courts, getOrCreateDefaultCourt } = useCourts();
   const [selectedCourtId, setSelectedCourtId] = useState<string | null>(null);
 
-  // Carregar quadra selecionada do localStorage ao montar
+  // Carregar quadra selecionada do localStorage ao montar (apenas uma vez)
   useEffect(() => {
     // Só executar no cliente
     if (typeof window === 'undefined' || !user?.id) return;
+    
+    // Se já há uma seleção no estado, não resetar (evita resetar ao trocar de aba ou quando courts atualiza)
+    if (selectedCourtId) return;
 
     const storageKey = `selectedCourt_${user.id}`;
     const savedCourtId = localStorage.getItem(storageKey);
@@ -57,7 +60,7 @@ export const useSelectedCourt = () => {
         console.error('Erro ao criar quadra padrão:', error);
       });
     }
-  }, [user?.id, courts, getOrCreateDefaultCourt]);
+  }, [user?.id, courts, getOrCreateDefaultCourt, selectedCourtId]);
 
   // Atualizar localStorage quando a quadra selecionada mudar
   const handleSetSelectedCourt = (courtId: string | null) => {

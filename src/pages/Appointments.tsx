@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useAppointments } from '@/hooks/useAppointments';
 import { useCourts } from '@/hooks/useCourts';
+import { useSelectedCourt } from '@/hooks/useSelectedCourt';
 import { formatCurrency, formatModalityWithValue } from '@/utils/currency';
 import { supabase } from '@/integrations/supabase/client';
 import { Calendar, ArrowLeft, Search, Filter, Plus, ChevronLeft, ChevronRight, Clock, CheckCircle, TrendingUp, Users, AlertCircle, Building2 } from 'lucide-react';
@@ -46,7 +47,7 @@ const Appointments = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { courts = [] } = useCourts();
-  const [selectedCourtId, setSelectedCourtId] = useState<string | null>(null);
+  const { selectedCourtId } = useSelectedCourt();
   const { appointments, isLoading } = useAppointments({ courtId: selectedCourtId || undefined });
   
   // Log quando appointments mudar
@@ -73,20 +74,15 @@ const Appointments = () => {
     }
   }, [user, loading, navigate]);
 
-  // Invalidar todas as queries quando a quadra selecionada mudar
-  // O React Query automaticamente fará um novo fetch quando o queryKey mudar
+  // O React Query automaticamente fará um novo fetch quando o queryKey mudar (courtId no useAppointments)
+  // Não precisamos invalidar manualmente, o React Query já detecta a mudança no queryKey
   useEffect(() => {
-    if (user?.id) {
+    if (user?.id && selectedCourtId !== undefined) {
       console.log('🔄 Appointments - Quadra selecionada mudou:', selectedCourtId);
       // Limpar filteredAppointments imediatamente para mostrar estado de loading
       setFilteredAppointments([]);
-      // Invalidar todas as queries de appointments para garantir que sejam refeitas
-      queryClient.invalidateQueries({ 
-        queryKey: ['appointments', user.id],
-        exact: false 
-      });
     }
-  }, [selectedCourtId, user?.id, queryClient]);
+  }, [selectedCourtId, user?.id]);
 
   useEffect(() => {
     console.log('🔄 applyFilters - appointments mudou:', appointments.length, 'courtId:', selectedCourtId);
