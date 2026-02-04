@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useCourts } from '@/hooks/useCourts';
 import { useSelectedCourt } from '@/hooks/useSelectedCourt';
 import {
@@ -24,6 +24,17 @@ export function CourtSelector({ className, showLabel = true }: CourtSelectorProp
     console.log('🎯 CourtSelector - Renderizado:', { selectedCourtId, selectedCourtName: selectedCourt?.name, courtsCount: courts.length });
   }, [selectedCourtId, selectedCourt, courts]);
 
+  // Usar useCallback para estabilizar a função e evitar re-renderizações desnecessárias
+  const handleValueChange = useCallback((value: string) => {
+    console.log('🎯 CourtSelector - onValueChange chamado:', value, 'Estado atual:', selectedCourtId);
+    if (value !== selectedCourtId) {
+      console.log('✅ CourtSelector - Atualizando para:', value);
+      setSelectedCourtId(value || null);
+    } else {
+      console.log('⚠️ CourtSelector - Valor já está selecionado, ignorando');
+    }
+  }, [selectedCourtId, setSelectedCourtId]);
+
   if (isLoading) {
     return (
       <div className={className}>
@@ -46,16 +57,8 @@ export function CourtSelector({ className, showLabel = true }: CourtSelectorProp
         </label>
       )}
       <Select 
-        key={`court-select-${selectedCourtId || 'none'}`} // Forçar re-render quando selectedCourtId mudar
         value={selectedCourtId || ''} 
-        onValueChange={(value) => {
-          console.log('🎯 CourtSelector - onValueChange chamado:', value, 'Estado atual:', selectedCourtId);
-          if (value !== selectedCourtId) {
-            setSelectedCourtId(value || null);
-          } else {
-            console.log('⚠️ CourtSelector - Valor já está selecionado, ignorando');
-          }
-        }}
+        onValueChange={handleValueChange}
       >
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Selecione uma quadra">

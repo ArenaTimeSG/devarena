@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useCourts } from './useCourts';
 import { useAuth } from './useAuth';
 
@@ -71,27 +71,32 @@ export const useSelectedCourt = () => {
   }, [user?.id, courts, courtsLoading, getOrCreateDefaultCourt]);
 
   // Atualizar localStorage quando a quadra selecionada mudar
-  const handleSetSelectedCourt = (courtId: string | null) => {
+  const handleSetSelectedCourt = useCallback((courtId: string | null) => {
     console.log('🎯 useSelectedCourt - handleSetSelectedCourt chamado:', courtId, 'Estado atual:', selectedCourtId);
     
-    // Evitar atualizações desnecessárias
-    if (selectedCourtId === courtId) {
-      console.log('⚠️ useSelectedCourt - Quadra já está selecionada, ignorando');
-      return;
-    }
-    
-    setSelectedCourtId(courtId);
-    if (user?.id && typeof window !== 'undefined') {
-      const storageKey = `selectedCourt_${user.id}`;
-      if (courtId) {
-        localStorage.setItem(storageKey, courtId);
-        console.log('✅ useSelectedCourt - Salvo no localStorage:', courtId);
-      } else {
-        localStorage.removeItem(storageKey);
-        console.log('✅ useSelectedCourt - Removido do localStorage');
+    // Evitar atualizações desnecessárias usando função de atualização funcional
+    setSelectedCourtId((currentId) => {
+      if (currentId === courtId) {
+        console.log('⚠️ useSelectedCourt - Quadra já está selecionada, ignorando');
+        return currentId;
       }
-    }
-  };
+      
+      console.log('✅ useSelectedCourt - Atualizando de', currentId, 'para', courtId);
+      
+      if (user?.id && typeof window !== 'undefined') {
+        const storageKey = `selectedCourt_${user.id}`;
+        if (courtId) {
+          localStorage.setItem(storageKey, courtId);
+          console.log('✅ useSelectedCourt - Salvo no localStorage:', courtId);
+        } else {
+          localStorage.removeItem(storageKey);
+          console.log('✅ useSelectedCourt - Removido do localStorage');
+        }
+      }
+      
+      return courtId;
+    });
+  }, [selectedCourtId, user?.id]);
 
   // Obter a quadra selecionada completa
   const selectedCourt = courts.find((c) => c.id === selectedCourtId && c.is_active) || null;
