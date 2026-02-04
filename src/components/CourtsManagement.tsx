@@ -190,8 +190,14 @@ const CourtsManagement = () => {
               <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleCreate} disabled={isCreating}>
-                {isCreating ? 'Criando...' : 'Criar Quadra'}
+              <Button 
+                variant="default"
+                onClick={handleCreate} 
+                disabled={isCreating}
+                className="bg-blue-600 hover:bg-blue-700 text-white !text-white font-semibold shadow-md hover:shadow-lg transition-all border-0"
+                style={{ color: 'white' }}
+              >
+                <span className="text-white">{isCreating ? 'Criando...' : 'Criar Quadra'}</span>
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -294,8 +300,14 @@ const CourtsManagement = () => {
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleUpdate} disabled={isUpdating}>
-              {isUpdating ? 'Atualizando...' : 'Atualizar'}
+            <Button 
+              variant="default"
+              onClick={handleUpdate} 
+              disabled={isUpdating}
+              className="bg-blue-600 hover:bg-blue-700 text-white !text-white font-semibold shadow-md hover:shadow-lg transition-all border-0"
+              style={{ color: 'white' }}
+            >
+              <span className="text-white">{isUpdating ? 'Atualizando...' : 'Atualizar'}</span>
             </Button>
           </DialogFooter>
         </DialogContent>
