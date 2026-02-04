@@ -143,10 +143,11 @@ const CourtsManagement = () => {
           <DialogTrigger asChild>
             <Button 
               variant="default"
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md hover:shadow-lg transition-all border-0"
+              className="bg-blue-600 hover:bg-blue-700 text-white !text-white font-semibold shadow-md hover:shadow-lg transition-all border-0 flex items-center gap-2"
+              style={{ color: 'white' }}
             >
-              <Plus className="mr-2 h-4 w-4" />
-              Nova Quadra
+              <Plus className="h-4 w-4" />
+              <span className="text-white">Nova Quadra</span>
             </Button>
           </DialogTrigger>
           <DialogContent>
