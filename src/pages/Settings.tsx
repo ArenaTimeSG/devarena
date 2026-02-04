@@ -112,9 +112,11 @@ Por favor, confirme sua presença respondendo:
 Agradecemos a confirmação!`,
     monthly_agenda: `Olá, {nome}!
 
-📅 Lembrete da sua agenda mensal:
-
-{eventos}
+Lembrete do seu agendamento:
+📅 Data: {data}
+🕐 Horário: {horario}
+🏀 Atividade: {modalidade}
+📍 Local: {local}
 
 Por favor, confirme sua presença respondendo:
 [1] Confirmo
@@ -245,9 +247,11 @@ Por favor, confirme sua presença respondendo:
 Agradecemos a confirmação!`,
         monthly_agenda: `Olá, {nome}!
 
-📅 Lembrete da sua agenda mensal:
-
-{eventos}
+Lembrete do seu agendamento:
+📅 Data: {data}
+🕐 Horário: {horario}
+🏀 Atividade: {modalidade}
+📍 Local: {local}
 
 Por favor, confirme sua presença respondendo:
 [1] Confirmo
@@ -417,9 +421,11 @@ Por favor, confirme sua presença respondendo:
 Agradecemos a confirmação!`,
       monthly_agenda: `Olá, {nome}!
 
-📅 Lembrete da sua agenda mensal:
-
-{eventos}
+Lembrete do seu agendamento:
+📅 Data: {data}
+🕐 Horário: {horario}
+🏀 Atividade: {modalidade}
+📍 Local: {local}
 
 Por favor, confirme sua presença respondendo:
 [1] Confirmo
@@ -876,7 +882,7 @@ Agradecemos a confirmação!`
                     )}
                   </div>
                   <CardDescription className="mt-2 text-slate-600">
-                    Personalize as mensagens de lembrete enviadas via WhatsApp. Use variáveis como {'{nome}'}, {'{data}'}, {'{horario}'}, {'{modalidade}'}, {'{local}'} e {'{eventos}'}.
+                    Personalize as mensagens de lembrete enviadas via WhatsApp. Use variáveis como {'{nome}'}, {'{data}'}, {'{horario}'}, {'{modalidade}'} e {'{local}'}.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6 space-y-8">
@@ -923,9 +929,9 @@ Agradecemos a confirmação!`
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <Label className="text-base font-semibold text-slate-800">Lembrete de Agenda Mensal</Label>
+                        <Label className="text-base font-semibold text-slate-800">Lembrete de Agendamento</Label>
                         <p className="text-sm text-slate-600 mt-1">
-                          Mensagem enviada para lembretes de eventos mensais recorrentes
+                          Mensagem enviada para lembretes de agendamentos
                         </p>
                       </div>
                       <Button
@@ -948,7 +954,10 @@ Agradecemos a confirmação!`
                       <p className="text-xs font-medium text-blue-800 mb-2">Variáveis disponíveis:</p>
                       <div className="flex flex-wrap gap-2 text-xs text-blue-700">
                         <code className="bg-blue-100 px-2 py-1 rounded">{'{nome}'}</code>
-                        <code className="bg-blue-100 px-2 py-1 rounded">{'{eventos}'}</code>
+                        <code className="bg-blue-100 px-2 py-1 rounded">{'{data}'}</code>
+                        <code className="bg-blue-100 px-2 py-1 rounded">{'{horario}'}</code>
+                        <code className="bg-blue-100 px-2 py-1 rounded">{'{modalidade}'}</code>
+                        <code className="bg-blue-100 px-2 py-1 rounded">{'{local}'}</code>
                       </div>
                     </div>
                   </div>

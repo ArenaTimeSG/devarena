@@ -51,7 +51,7 @@ export interface OnlineBookingConfig {
 
 export interface WhatsAppTemplates {
   appointment_reminder: string; // Modelo para lembrete de agendamento de horários
-  monthly_agenda: string; // Modelo para lembrete de agenda mensal
+  monthly_agenda: string; // Modelo para lembrete de agendamento
 }
 
 export interface Settings {
@@ -141,9 +141,11 @@ Por favor, confirme sua presença respondendo:
 Agradecemos a confirmação!`,
     monthly_agenda: `Olá, {nome}!
 
-📅 Lembrete da sua agenda mensal:
-
-{eventos}
+Lembrete do seu agendamento:
+📅 Data: {data}
+🕐 Horário: {horario}
+🏀 Atividade: {modalidade}
+📍 Local: {local}
 
 Por favor, confirme sua presença respondendo:
 [1] Confirmo

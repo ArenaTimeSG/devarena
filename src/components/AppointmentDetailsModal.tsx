@@ -12,6 +12,8 @@ import { formatCurrency } from '@/utils/currency';
 import { useAppointments, AppointmentWithModality } from '@/hooks/useAppointments';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
+import { useSettings } from '@/hooks/useSettings';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 interface AppointmentDetailsModalProps {
   isOpen: boolean;
@@ -30,6 +32,8 @@ const AppointmentDetailsModal = ({
   const { deleteAppointment } = useAppointments();
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { settings } = useSettings();
+  const { profile } = useUserProfile();
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
   const [showSingleDeleteDialog, setShowSingleDeleteDialog] = useState(false);
@@ -120,7 +124,17 @@ const AppointmentDetailsModal = ({
     }
   };
 
-  // Monta link do WhatsApp com mensagem de confirmação
+  // Função para substituir variáveis no template
+  const replaceTemplateVariables = (template: string, variables: Record<string, string>) => {
+    let result = template;
+    Object.keys(variables).forEach(key => {
+      const regex = new RegExp(`\\{${key}\\}`, 'g');
+      result = result.replace(regex, variables[key] || '');
+    });
+    return result;
+  };
+
+  // Monta link do WhatsApp com mensagem de confirmação usando template
   const buildWhatsAppLink = () => {
     const phoneRaw = appointment?.client?.phone as any;
     let digits = (phoneRaw || '').toString().replace(/\D/g, '');
@@ -138,26 +152,36 @@ const AppointmentDetailsModal = ({
       }
     }
 
+    // Obter template salvo ou usar padrão
+    const template = settings?.whatsapp_templates?.appointment_reminder || `Olá, {nome}!
+
+Lembrete do seu agendamento:
+📅 Data: {data}
+🕐 Horário: {horario}
+🏀 Atividade: {modalidade}
+📍 Local: {local}
+
+Por favor, confirme sua presença respondendo:
+[1] Confirmo
+[2] Não poderei comparecer
+
+Agradecemos a confirmação!`;
+
+    // Preparar variáveis para substituição
     const nome = appointment?.client?.name || 'Cliente';
     const data = appointment?.date ? format(new Date(appointment.date), "dd/MM/yyyy", { locale: ptBR }) : '';
     const horario = appointment?.date ? format(new Date(appointment.date), "HH:mm", { locale: ptBR }) : '';
     const modalidade = (appointment as any)?.modality_info?.name || (appointment as any)?.modality || '';
+    const local = profile?.name || 'Nosso Estabelecimento';
 
-    // Fallback 100% compatível com WhatsApp Web/API (sem emojis e sem acentos)
-    const mensagemPlain = [
-      `Ola, ${nome}!`,
-      `Lembrete do seu agendamento:`,
-      modalidade ? `Atividade: ${modalidade}` : null,
-      `Data: ${data}`,
-      `Horario: ${horario}`,
-      `Local: [NOME DO GINASIO/ARENA]`,
-      ``,
-      `Por favor, confirme sua presenca respondendo:`,
-      `[1] Confirmo`,
-      `[2] Nao poderei comparecer`,
-      ``,
-      `Agradecemos a confirmacao!`,
-    ].filter(Boolean).join('\n');
+    // Substituir variáveis no template
+    const mensagemPlain = replaceTemplateVariables(template, {
+      nome,
+      data,
+      horario,
+      modalidade,
+      local
+    });
 
     const encoded = encodeURIComponent(mensagemPlain);
     return `https://wa.me/${digits}?text=${encoded}`;
