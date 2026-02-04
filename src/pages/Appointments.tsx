@@ -9,9 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { useAppointments } from '@/hooks/useAppointments';
+import { useCourts } from '@/hooks/useCourts';
 import { formatCurrency, formatModalityWithValue } from '@/utils/currency';
 import { supabase } from '@/integrations/supabase/client';
-import { Calendar, ArrowLeft, Search, Filter, Plus, ChevronLeft, ChevronRight, Clock, CheckCircle, TrendingUp, Users, AlertCircle } from 'lucide-react';
+import { Calendar, ArrowLeft, Search, Filter, Plus, ChevronLeft, ChevronRight, Clock, CheckCircle, TrendingUp, Users, AlertCircle, Building2 } from 'lucide-react';
 import ResponsiveFilters from '@/components/ui/responsive-filters';
 import { format, isBefore, isEqual, startOfMonth, endOfMonth, addMonths, subMonths, isAfter, startOfDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -42,7 +43,9 @@ interface GroupedAppointments {
 const Appointments = () => {
   const { user, loading } = useAuth();
   const { toast } = useToast();
-  const { appointments, isLoading } = useAppointments();
+  const { courts = [] } = useCourts();
+  const [selectedCourtId, setSelectedCourtId] = useState<string | null>(null);
+  const { appointments, isLoading } = useAppointments({ courtId: selectedCourtId || undefined });
   
   const navigate = useNavigate();
   const [filteredAppointments, setFilteredAppointments] = useState<AppointmentWithModality[]>([]);
@@ -71,7 +74,7 @@ const Appointments = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [appointments, searchTerm, statusFilter, modalityFilter, selectedMonth]);
+  }, [appointments, searchTerm, statusFilter, modalityFilter, selectedMonth, selectedCourtId]);
 
   // Função para filtrar agendamentos por mês selecionado
   const getAppointmentsForSelectedMonth = () => {
@@ -352,6 +355,18 @@ const Appointments = () => {
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             filters={[
+              {
+                label: "Quadra",
+                value: selectedCourtId || 'all',
+                options: [
+                  { value: "all", label: "Todas as Quadras" },
+                  ...courts.map(court => ({
+                    value: court.id,
+                    label: court.name
+                  }))
+                ],
+                onValueChange: (value) => setSelectedCourtId(value === 'all' ? null : value)
+              },
               {
                 label: "Status",
                 value: statusFilter,
