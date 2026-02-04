@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { useCourts } from '@/hooks/useCourts';
 import { useSelectedCourt } from '@/hooks/useSelectedCourt';
 import {
@@ -18,22 +18,33 @@ type CourtSelectorProps = {
 export function CourtSelector({ className, showLabel = true }: CourtSelectorProps) {
   const { courts, isLoading } = useCourts();
   const { selectedCourtId, selectedCourt, setSelectedCourtId } = useSelectedCourt();
+  const [localValue, setLocalValue] = useState<string>(selectedCourtId || '');
+
+  // Sincronizar valor local com o hook global
+  useEffect(() => {
+    const newValue = selectedCourtId || '';
+    if (localValue !== newValue) {
+      console.log('🔄 CourtSelector - Sincronizando valor local:', localValue, '->', newValue);
+      setLocalValue(newValue);
+    }
+  }, [selectedCourtId]);
 
   // Log para debug
   useEffect(() => {
-    console.log('🎯 CourtSelector - Renderizado:', { selectedCourtId, selectedCourtName: selectedCourt?.name, courtsCount: courts.length });
-  }, [selectedCourtId, selectedCourt, courts]);
+    console.log('🎯 CourtSelector - Renderizado:', { selectedCourtId, selectedCourtName: selectedCourt?.name, localValue, courtsCount: courts.length });
+  }, [selectedCourtId, selectedCourt, localValue, courts]);
 
   // Usar useCallback para estabilizar a função e evitar re-renderizações desnecessárias
   const handleValueChange = useCallback((value: string) => {
-    console.log('🎯 CourtSelector - onValueChange chamado:', value, 'Estado atual:', selectedCourtId);
+    console.log('🎯 CourtSelector - onValueChange chamado:', value, 'Estado atual:', selectedCourtId, 'Local:', localValue);
+    setLocalValue(value); // Atualizar valor local imediatamente para feedback visual
     if (value !== selectedCourtId) {
       console.log('✅ CourtSelector - Atualizando para:', value);
       setSelectedCourtId(value || null);
     } else {
       console.log('⚠️ CourtSelector - Valor já está selecionado, ignorando');
     }
-  }, [selectedCourtId, setSelectedCourtId]);
+  }, [selectedCourtId, localValue, setSelectedCourtId]);
 
   if (isLoading) {
     return (
@@ -57,7 +68,7 @@ export function CourtSelector({ className, showLabel = true }: CourtSelectorProp
         </label>
       )}
       <Select 
-        value={selectedCourtId || ''} 
+        value={localValue} 
         onValueChange={handleValueChange}
       >
         <SelectTrigger className="w-full">

@@ -67,9 +67,20 @@ const Dashboard = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { selectedCourtId } = useSelectedCourt();
+  
+  // Log quando selectedCourtId mudar
+  useEffect(() => {
+    console.log('🔄 Dashboard - selectedCourtId mudou:', selectedCourtId);
+  }, [selectedCourtId]);
+  
   const { appointments, getFinancialSummary, isLoading: appointmentsLoading, refetch } = useAppointments({ 
     courtId: selectedCourtId 
   });
+  
+  // Log quando appointments mudar
+  useEffect(() => {
+    console.log('🔄 Dashboard - appointments atualizado:', appointments.length, 'para courtId:', selectedCourtId);
+  }, [appointments, selectedCourtId]);
   
   const navigate = useNavigate();
   const [currentWeek, setCurrentWeek] = useState(new Date());
