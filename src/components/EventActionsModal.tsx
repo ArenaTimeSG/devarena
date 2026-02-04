@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { MessageCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
+import { useSettings } from '@/hooks/useSettings';
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 export interface EventActionsModalProps {
   isOpen: boolean;
@@ -33,6 +35,8 @@ export interface EventActionsModalProps {
 }
 
 const EventActionsModal: React.FC<EventActionsModalProps> = ({ isOpen, onClose, eventId, currentStatus = 'a_cobrar', onUpdateStatus, onDelete, info, onSave }) => {
+  const { settings } = useSettings();
+  const { profile } = useUserProfile();
   const [status, setStatus] = useState<'a_cobrar' | 'pago' | 'cancelado'>(currentStatus);
   const [clientName, setClientName] = useState(info?.clientName || '');
   const [phone, setPhone] = useState(info?.phone || '');
@@ -80,33 +84,55 @@ const EventActionsModal: React.FC<EventActionsModalProps> = ({ isOpen, onClose, 
     }
   };
 
+  // Função para substituir variáveis no template
+  const replaceTemplateVariables = (template: string, variables: Record<string, string>) => {
+    let result = template;
+    Object.keys(variables).forEach(key => {
+      const regex = new RegExp(`\\{${key}\\}`, 'g');
+      result = result.replace(regex, variables[key] || '');
+    });
+    return result;
+  };
+
   const buildWhatsAppLink = () => {
     const phoneDigits = normalizePhoneForWhatsApp(phone);
     if (!phoneDigits) return null;
 
-    // Observacao: alguns emojis podem falhar no wa.me. Manteremos apenas os mais seguros.
-    const dateLabel = (() => {
+    // Obter template salvo ou usar padrão
+    const template = settings?.whatsapp_templates?.monthly_agenda || `Olá, {nome}!
+
+Lembrete do seu agendamento:
+📅 Data: {data}
+🕐 Horário: {horario}
+🏀 Atividade: {modalidade}
+📍 Local: {local}
+
+Por favor, confirme sua presença respondendo:
+[1] Confirmo
+[2] Não poderei comparecer
+
+Agradecemos a confirmação!`;
+
+    // Preparar variáveis para substituição
+    const nome = clientName || 'Cliente';
+    const data = (() => {
       const raw = info?.eventDate;
       const d = normalizeLocalDate(raw || '');
-      if (!d) return '[DATA]';
+      if (!d) return '';
       return format(d, 'dd/MM/yyyy');
     })();
-    const mensagem = [
-      'Lembrete \uD83D\uDCE2', // 📢 em unicode
-      '',
-      `Olá, ${clientName || 'Cliente'}!`,
-      '',
-      'Este é o lembrete da sua reserva do Salão de Festas \uD83C\uDF89', // 🎉
-      '',
-      `📅 Data: ${dateLabel}`,
-      `📍 Local: [LOCAL]`,
-      '',
-      'Por favor, confirme sua presença:',
-      '✅ Confirmo',
-      '❌ Preciso cancelar/alterar',
-      '',
-      'Agradecemos a confirmação!'
-    ].join('\n');
+    const horario = startTime && endTime ? `${startTime} às ${endTime}` : startTime || '';
+    const modalidade = 'Evento Mensal'; // Para eventos mensais, podemos usar um nome padrão ou deixar vazio
+    const local = profile?.name || 'Nosso Estabelecimento';
+
+    // Substituir variáveis no template
+    const mensagem = replaceTemplateVariables(template, {
+      nome,
+      data,
+      horario,
+      modalidade,
+      local
+    });
 
     return `https://wa.me/${phoneDigits}?text=${encodeURIComponent(mensagem)}`;
   };
