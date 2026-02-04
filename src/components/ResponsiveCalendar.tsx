@@ -551,17 +551,35 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                                 }}
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  // Calcular o horário aproximado baseado na posição do clique dentro da zona
-                                  const rect = e.currentTarget.getBoundingClientRect();
-                                  const clickY = e.clientY - rect.top;
-                                  const minutesFromZoneTop = (clickY / zone.height) * (zone.height / hourCellHeight * 60);
+                                  // Calcular o horário baseado na posição absoluta do clique dentro da célula completa
+                                  // Obter a célula pai (td) para calcular a posição relativa
+                                  const cellElement = e.currentTarget.closest('td') as HTMLElement;
+                                  if (!cellElement) {
+                                    onCellClick(day, timeSlot);
+                                    return;
+                                  }
+                                  
+                                  const cellRect = cellElement.getBoundingClientRect();
+                                  const clickYRelativeToCell = e.clientY - cellRect.top;
+                                  
+                                  // Converter posição em pixels para minutos dentro da célula de 1 hora
+                                  // hourCellHeight pixels = 60 minutos
+                                  const minutesFromCellTop = (clickYRelativeToCell / hourCellHeight) * 60;
+                                  
                                   const slotHour = parseInt(timeSlot.split(':')[0]);
                                   const slotMinute = parseInt(timeSlot.split(':')[1]) || 0;
-                                  const totalMinutesFromSlotStart = (zone.top / hourCellHeight * 60) + minutesFromZoneTop;
-                                  const clickMinute = Math.floor(totalMinutesFromSlotStart);
-                                  const clickHour = slotHour + Math.floor(clickMinute / 60);
-                                  const clickMinuteFinal = clickMinute % 60;
-                                  const clickTime = `${String(clickHour).padStart(2, '0')}:${String(clickMinuteFinal).padStart(2, '0')}`;
+                                  
+                                  // Calcular minutos totais desde o início do slot
+                                  const totalMinutes = slotMinute + minutesFromCellTop;
+                                  const clickHourFinal = slotHour + Math.floor(totalMinutes / 60);
+                                  const clickMinuteFinal = Math.floor(totalMinutes % 60);
+                                  
+                                  // Arredondar para o intervalo de 30 minutos mais próximo
+                                  const roundedMinute = Math.round(clickMinuteFinal / 30) * 30;
+                                  const finalHour = roundedMinute >= 60 ? clickHourFinal + 1 : clickHourFinal;
+                                  const finalMinute = roundedMinute >= 60 ? roundedMinute - 60 : roundedMinute;
+                                  
+                                  const clickTime = `${String(finalHour).padStart(2, '0')}:${String(finalMinute).padStart(2, '0')}`;
                                   onCellClick(day, clickTime);
                                 }}
                               />
