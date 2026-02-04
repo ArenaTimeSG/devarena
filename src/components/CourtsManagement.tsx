@@ -141,7 +141,7 @@ const CourtsManagement = () => {
         </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md hover:shadow-lg transition-all">
               <Plus className="mr-2 h-4 w-4" />
               Nova Quadra
             </Button>
