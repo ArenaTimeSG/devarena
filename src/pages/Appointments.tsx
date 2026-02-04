@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +44,7 @@ interface GroupedAppointments {
 const Appointments = () => {
   const { user, loading } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { courts = [] } = useCourts();
   const [selectedCourtId, setSelectedCourtId] = useState<string | null>(null);
   const { appointments, isLoading, refetch } = useAppointments({ courtId: selectedCourtId || undefined });
@@ -66,13 +68,17 @@ const Appointments = () => {
     }
   }, [user, loading, navigate]);
 
-  // Forçar refetch quando a quadra selecionada mudar
+  // Invalidar e refazer query quando a quadra selecionada mudar
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       console.log('🔄 Appointments - Quadra selecionada mudou:', selectedCourtId);
-      refetch();
+      // Invalidar todas as queries de appointments para forçar refetch
+      queryClient.invalidateQueries({ 
+        queryKey: ['appointments', user.id],
+        exact: false 
+      });
     }
-  }, [selectedCourtId, user, refetch]);
+  }, [selectedCourtId, user?.id, queryClient]);
 
   useEffect(() => {
     applyFilters();
