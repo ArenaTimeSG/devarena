@@ -341,7 +341,7 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                     const allDayAppointments = dayAppointments.length > 0 ? dayAppointments : (fallbackAppointment ? [fallbackAppointment] : []);
                     
                     // Filtrar agendamentos que devem ser renderizados nesta célula
-                    // Renderizar apenas se o agendamento começa nesta célula (não antes)
+                    // Renderizar agendamentos que começam nesta célula OU que atravessam esta célula
                     const appointmentsToRender = allDayAppointments.filter((appointment) => {
                       if (!appointment) return false;
                       const aptStart = new Date(appointment.date);
@@ -350,12 +350,7 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                       // Verificar se o agendamento se sobrepõe com este slot
                       const overlaps = aptStart < slotEnd && slotStart < aptEnd;
                       
-                      if (!overlaps) return false;
-                      
-                      // Renderizar apenas se o agendamento começa dentro deste slot
-                      // Isso evita renderizar o mesmo agendamento múltiplas vezes
-                      // O agendamento começa dentro do slot se: slotStart <= aptStart < slotEnd
-                      return aptStart >= slotStart && aptStart < slotEnd;
+                      return overlaps;
                     });
                     
                     return (
@@ -368,8 +363,15 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                               ? 'bg-blue-50/50 hover:bg-blue-100/50' 
                               : 'bg-white hover:bg-slate-50'
                         }`}
-                        style={{ overflow: 'visible' }}
-                        onClick={() => onCellClick(day, timeSlot)}
+                        style={{ overflow: 'visible', position: 'relative' }}
+                        onClick={(e) => {
+                          // Verificar se o clique foi em uma área vazia (não em um agendamento)
+                          const target = e.target as HTMLElement;
+                          // Se o clique foi diretamente no td ou em um elemento sem pointer-events, processar
+                          if (target === e.currentTarget || target.closest('.appointment-block') === null) {
+                            onCellClick(day, timeSlot);
+                          }
+                        }}
                         whileHover={{ scale: 1.01 }}
                         transition={{ duration: 0.2 }}
                       >
@@ -403,25 +405,40 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                           let topOffset = 0;
                           let height = totalHeight;
                           
-                          // Agendamento sempre começa dentro deste slot (devido ao filtro acima)
-                          topOffset = calculateAppointmentTopOffset(aptStart, hourCellHeight);
-                          
-                          // Calcular altura até o fim do agendamento
+                          const slotStartTime = slotStart.getTime();
                           const slotEndTime = slotEnd.getTime();
+                          const aptStartTime = aptStart.getTime();
                           const aptEndTime = aptEnd.getTime();
                           
-                          if (aptEndTime <= slotEndTime) {
-                            // Agendamento termina dentro deste slot
-                            // Usar altura total calculada
-                            height = totalHeight;
+                          // Verificar se o agendamento começa antes desta célula
+                          if (aptStartTime < slotStartTime) {
+                            // Agendamento atravessa esta célula (começou em célula anterior)
+                            // Começar do topo desta célula
+                            topOffset = 0;
+                            
+                            // Calcular altura até o fim desta célula ou até o fim do agendamento (o que for menor)
+                            if (aptEndTime <= slotEndTime) {
+                              // Agendamento termina dentro desta célula
+                              const minutesFromSlotStart = (aptEndTime - slotStartTime) / (60 * 1000);
+                              height = (minutesFromSlotStart / 60) * hourCellHeight;
+                            } else {
+                              // Agendamento atravessa múltiplas células a partir desta
+                              // Altura completa desta célula
+                              height = hourCellHeight;
+                            }
                           } else {
-                            // Agendamento atravessa múltiplas células
-                            // Calcular altura até o fim do slot atual
-                            const heightUntilSlotEnd = hourCellHeight - topOffset;
-                            // Calcular quantas células adicionais o agendamento atravessa
-                            const additionalCells = Math.ceil((aptEndTime - slotEndTime) / (60 * 60 * 1000));
-                            // Altura total = altura até fim do slot + altura das células seguintes
-                            height = heightUntilSlotEnd + (additionalCells * hourCellHeight);
+                            // Agendamento começa dentro desta célula
+                            topOffset = calculateAppointmentTopOffset(aptStart, hourCellHeight);
+                            
+                            if (aptEndTime <= slotEndTime) {
+                              // Agendamento termina dentro deste slot
+                              // Usar altura proporcional calculada
+                              height = totalHeight;
+                            } else {
+                              // Agendamento atravessa múltiplas células
+                              // Calcular altura até o fim do slot atual apenas
+                              height = hourCellHeight - topOffset;
+                            }
                           }
                           
                           // Não limitar altura - permitir que atravesse múltiplas células
@@ -433,14 +450,15 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                           
                           return (
                             <motion.div
-                              key={appointment.id}
-                              className="absolute rounded-md shadow-sm border border-blue-200/50 overflow-hidden cursor-pointer z-20"
+                              key={`${appointment.id}-${timeSlot}`}
+                              className="appointment-block absolute rounded-md shadow-sm border border-blue-200/50 overflow-hidden z-20"
                               style={{
                                 top: `${topOffset}px`,
                                 left: left,
                                 width: width,
                                 height: `${Math.max(18, height)}px`,
                                 minHeight: '18px',
+                                pointerEvents: 'auto', // Permitir cliques no agendamento
                               }}
                               onClick={(e) => {
                                 e.stopPropagation();
