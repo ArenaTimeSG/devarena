@@ -72,13 +72,23 @@ export const useSelectedCourt = () => {
 
   // Atualizar localStorage quando a quadra selecionada mudar
   const handleSetSelectedCourt = (courtId: string | null) => {
+    console.log('🎯 useSelectedCourt - handleSetSelectedCourt chamado:', courtId, 'Estado atual:', selectedCourtId);
+    
+    // Evitar atualizações desnecessárias
+    if (selectedCourtId === courtId) {
+      console.log('⚠️ useSelectedCourt - Quadra já está selecionada, ignorando');
+      return;
+    }
+    
     setSelectedCourtId(courtId);
     if (user?.id && typeof window !== 'undefined') {
       const storageKey = `selectedCourt_${user.id}`;
       if (courtId) {
         localStorage.setItem(storageKey, courtId);
+        console.log('✅ useSelectedCourt - Salvo no localStorage:', courtId);
       } else {
         localStorage.removeItem(storageKey);
+        console.log('✅ useSelectedCourt - Removido do localStorage');
       }
     }
   };
