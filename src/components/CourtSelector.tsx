@@ -19,6 +19,11 @@ export function CourtSelector({ className, showLabel = true }: CourtSelectorProp
   const { courts, isLoading } = useCourts();
   const { selectedCourtId, selectedCourt, setSelectedCourtId } = useSelectedCourt();
 
+  // Log para debug
+  useEffect(() => {
+    console.log('🎯 CourtSelector - Renderizado:', { selectedCourtId, selectedCourtName: selectedCourt?.name, courtsCount: courts.length });
+  }, [selectedCourtId, selectedCourt, courts]);
+
   if (isLoading) {
     return (
       <div className={className}>
@@ -32,8 +37,6 @@ export function CourtSelector({ className, showLabel = true }: CourtSelectorProp
     return null;
   }
 
-  const displayValue = selectedCourt ? selectedCourt.name : 'Selecione uma quadra';
-
   return (
     <div className={className}>
       {showLabel && (
@@ -43,18 +46,27 @@ export function CourtSelector({ className, showLabel = true }: CourtSelectorProp
         </label>
       )}
       <Select 
+        key={`court-select-${selectedCourtId || 'none'}`} // Forçar re-render quando selectedCourtId mudar
         value={selectedCourtId || ''} 
         onValueChange={(value) => {
-          console.log('🎯 CourtSelector - Selecionando quadra:', value);
-          setSelectedCourtId(value || null);
+          console.log('🎯 CourtSelector - onValueChange chamado:', value, 'Estado atual:', selectedCourtId);
+          if (value !== selectedCourtId) {
+            setSelectedCourtId(value || null);
+          } else {
+            console.log('⚠️ CourtSelector - Valor já está selecionado, ignorando');
+          }
         }}
       >
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Selecione uma quadra">
-            <span className="flex items-center gap-2">
-              {selectedCourt && <Building2 className="h-4 w-4" />}
-              {displayValue}
-            </span>
+            {selectedCourt ? (
+              <span className="flex items-center gap-2">
+                <Building2 className="h-4 w-4" />
+                {selectedCourt.name}
+              </span>
+            ) : (
+              'Selecione uma quadra'
+            )}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
