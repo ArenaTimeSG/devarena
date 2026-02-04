@@ -18,6 +18,7 @@ interface ListaHorariosProps {
   onHorarioSelect: (horario: string) => void;
   modalidade: Modalidade;
   data: Date;
+  courtId?: string;
   workingHours?: any; // Configuração de horários de funcionamento
   isLoading?: boolean; // Estado de carregamento
 }

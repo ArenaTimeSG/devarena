@@ -26,6 +26,7 @@ interface WorkingHours {
 interface CalendarioProps {
   onDataSelect: (data: Date) => void;
   modalidade: Modalidade;
+  courtId?: string;
   workingHours?: WorkingHours;
   tempoMinimoAntecedencia?: number;
 }

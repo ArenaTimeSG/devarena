@@ -13,12 +13,14 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase';
 
 import CardModalidade from '@/components/booking/CardModalidade';
+import CardQuadra from '@/components/booking/CardQuadra';
 import Calendario from '@/components/booking/Calendario';
 import ListaHorarios from '@/components/booking/ListaHorarios';
 import FormCliente from '@/components/booking/FormCliente';
 import ResumoReserva from '@/components/booking/ResumoReserva';
 import AgendamentosMenu from '@/components/booking/AgendamentosMenu';
 import ClientAuth from './ClientAuth';
+import { useCourts } from '@/hooks/useCourts';
 
 interface Modalidade {
   id: string;
@@ -48,6 +50,7 @@ const OnlineBooking = () => {
   
   const [step, setStep] = useState(1);
   const [reserva, setReserva] = useState<Reserva>({
+    quadra: null,
     modalidade: null,
     data: null,
     horario: null,
@@ -103,6 +106,42 @@ const OnlineBooking = () => {
   const modalities = adminData?.modalities || [];
   const modalitiesLoading = false;
 
+  // Buscar quadras do admin
+  const [quadras, setQuadras] = useState<Quadra[]>([]);
+  const [quadrasLoading, setQuadrasLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchQuadras = async () => {
+      if (!adminData?.user?.user_id) {
+        setQuadrasLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('courts')
+          .select('id, name, description')
+          .eq('user_id', adminData.user.user_id)
+          .eq('is_active', true)
+          .order('name', { ascending: true });
+
+        if (error) {
+          console.error('❌ Erro ao buscar quadras:', error);
+          setQuadras([]);
+        } else {
+          setQuadras(data || []);
+        }
+      } catch (error) {
+        console.error('❌ Erro ao buscar quadras:', error);
+        setQuadras([]);
+      } finally {
+        setQuadrasLoading(false);
+      }
+    };
+
+    fetchQuadras();
+  }, [adminData?.user?.user_id]);
+
   // Debug: Log dos dados do admin e modalidades
   console.log('🔍 OnlineBooking - adminData:', adminData);
   console.log('🔍 OnlineBooking - adminUserId:', adminData?.user?.user_id);
@@ -134,6 +173,7 @@ const OnlineBooking = () => {
   const { data: availableHours = [], isLoading: availableHoursLoading } = useAvailableHours({
     adminUserId: adminData?.user?.user_id,
     selectedDate: reserva.data || new Date(),
+    courtId: reserva.quadra?.id,
     workingHours: adminData?.settings?.working_hours || {
       monday: { enabled: true, start: '08:00', end: '18:00' },
       tuesday: { enabled: true, start: '08:00', end: '18:00' },
@@ -182,19 +222,24 @@ const OnlineBooking = () => {
     }));
   }, [modalities, getModalidadeColor]);
 
+  const handleQuadraSelect = useCallback((quadra: Quadra) => {
+    setReserva(prev => ({ ...prev, quadra }));
+    setStep(2);
+  }, []);
+
   const handleModalidadeSelect = useCallback((modalidade: Modalidade) => {
     setReserva(prev => ({ ...prev, modalidade }));
-    setStep(2);
+    setStep(3);
   }, []);
 
   const handleDataSelect = useCallback((data: Date) => {
     setReserva(prev => ({ ...prev, data }));
-    setStep(3);
+    setStep(4);
   }, []);
 
   const handleHorarioSelect = useCallback((horario: string) => {
     setReserva(prev => ({ ...prev, horario }));
-    setStep(4);
+    setStep(5);
   }, []);
 
   // Atualizar dados do cliente quando ele fizer login
@@ -243,8 +288,10 @@ const OnlineBooking = () => {
         appointment_data: {
           user_id: adminData.user.user_id,
           client_id: client.id,
+          court_id: reserva.quadra.id,
           date: dataHora.toISOString(),
           modality: reserva.modalidade.name,
+          modality_id: reserva.modalidade.id,
           valor_total: reserva.modalidade.valor,
           payment_status: 'pending',
           status: 'a_cobrar'
@@ -280,7 +327,7 @@ const OnlineBooking = () => {
   const createAppointment = useCallback(async (paymentStatus: 'not_required' | 'pending' | 'failed' = 'not_required') => {
     console.log('🔍 OnlineBooking: Criando agendamento sem pagamento');
     
-    if (!adminData || !reserva.modalidade || !reserva.data || !reserva.horario || !client) {
+    if (!adminData || !reserva.quadra || !reserva.modalidade || !reserva.data || !reserva.horario || !client) {
       console.error('❌ OnlineBooking: Dados insuficientes para criar agendamento');
       return;
     }
@@ -331,6 +378,7 @@ const OnlineBooking = () => {
             setReservaConfirmada(false);
             setReservationStatus(null);
             setReserva({
+              quadra: null,
               modalidade: null,
               data: null,
               horario: null,
@@ -406,6 +454,21 @@ const OnlineBooking = () => {
           </div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Agendamento Online Desativado</h1>
           <p className="text-slate-600 text-sm sm:text-base">O agendamento online está temporariamente indisponível.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Se não há quadras cadastradas
+  if (quadras.length === 0 && !quadrasLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
+        <div className="text-center space-y-4 max-w-sm">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto">
+            <AlertCircle className="w-6 h-6 sm:w-8 sm:h-8 text-orange-600" />
+          </div>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Nenhuma quadra disponível</h1>
+          <p className="text-slate-600 text-sm sm:text-base">Não há quadras cadastradas para agendamento no momento.</p>
         </div>
       </div>
     );
@@ -496,6 +559,7 @@ const OnlineBooking = () => {
                 setReservaConfirmada(false);
                 setReservationStatus(null);
                 setReserva({
+                  quadra: null,
                   modalidade: null,
                   data: null,
                   horario: null,
@@ -579,7 +643,7 @@ const OnlineBooking = () => {
           {/* Progress Steps - Mobile */}
           <div className="mt-3 sm:hidden">
             <div className="flex items-center justify-center gap-1">
-              {[1, 2, 3, 4, 5].map((stepNumber) => (
+              {[1, 2, 3, 4, 5, 6].map((stepNumber) => (
                 <div key={stepNumber} className="flex items-center">
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
                     stepNumber <= step 
@@ -588,7 +652,7 @@ const OnlineBooking = () => {
                   }`}>
                     {stepNumber}
                   </div>
-                  {stepNumber < 5 && (
+                  {stepNumber < 6 && (
                     <div className={`w-4 h-1 mx-1 ${
                       stepNumber < step ? 'bg-blue-600' : 'bg-slate-200'
                     }`} />
@@ -600,7 +664,7 @@ const OnlineBooking = () => {
           
           {/* Progress Steps - Desktop */}
           <div className="hidden sm:flex items-center justify-center gap-2 mt-4">
-            {[1, 2, 3, 4, 5].map((stepNumber) => (
+            {[1, 2, 3, 4, 5, 6].map((stepNumber) => (
               <div key={stepNumber} className="flex items-center">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                   stepNumber <= step 
@@ -609,7 +673,7 @@ const OnlineBooking = () => {
                 }`}>
                   {stepNumber}
                 </div>
-                {stepNumber < 5 && (
+                {stepNumber < 6 && (
                   <div className={`w-8 h-1 mx-1 ${
                     stepNumber < step ? 'bg-blue-600' : 'bg-slate-200'
                   }`} />
@@ -628,8 +692,28 @@ const OnlineBooking = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          {/* Step 1: Seleção da Modalidade */}
+          {/* Step 1: Seleção da Quadra */}
           {step === 1 && (
+            <div>
+              <div className="text-center mb-6 sm:mb-8">
+                <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Escolha a Quadra</h2>
+                <p className="text-gray-600 text-sm sm:text-base">Selecione a quadra onde deseja praticar</p>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                {quadras.map((quadra) => (
+                  <CardQuadra
+                    key={quadra.id}
+                    quadra={quadra}
+                    onSelect={handleQuadraSelect}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Seleção da Modalidade */}
+          {step === 2 && (
             <div>
               <div className="text-center mb-6 sm:mb-8">
                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Escolha sua Modalidade</h2>
@@ -648,8 +732,8 @@ const OnlineBooking = () => {
             </div>
           )}
 
-          {/* Step 2: Calendário */}
-          {step === 2 && (
+          {/* Step 3: Calendário */}
+          {step === 3 && (
             <div>
               <div className="text-center mb-6 sm:mb-8">
                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Escolha a Data</h2>
@@ -662,6 +746,7 @@ const OnlineBooking = () => {
                 <Calendario
                   onDataSelect={handleDataSelect}
                   modalidade={reserva.modalidade!}
+                  courtId={reserva.quadra?.id}
                   workingHours={adminData?.settings?.working_hours}
                   tempoMinimoAntecedencia={adminData?.settings?.online_booking?.tempo_minimo_antecedencia || 24}
                 />
@@ -669,8 +754,8 @@ const OnlineBooking = () => {
             </div>
           )}
 
-          {/* Step 3: Horários */}
-          {step === 3 && (
+          {/* Step 4: Horários */}
+          {step === 4 && (
             <div>
               <div className="text-center mb-6 sm:mb-8">
                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Escolha o Horário</h2>
@@ -692,8 +777,8 @@ const OnlineBooking = () => {
             </div>
           )}
 
-          {/* Step 4: Dados do Cliente */}
-          {step === 4 && (
+          {/* Step 5: Dados do Cliente */}
+          {step === 5 && (
             <div>
               <div className="text-center mb-6 sm:mb-8">
                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Seus Dados</h2>
@@ -748,8 +833,8 @@ const OnlineBooking = () => {
             </div>
           )}
 
-          {/* Step 5: Resumo e Confirmação */}
-          {step === 5 && (
+          {/* Step 6: Resumo e Confirmação */}
+          {step === 6 && (
             <div>
               <div className="text-center mb-6 sm:mb-8">
                 <h2 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Confirme sua Reserva</h2>

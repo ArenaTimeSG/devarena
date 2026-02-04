@@ -17,6 +17,7 @@ interface UseAvailableHoursProps {
   selectedDate: Date;
   tempoMinimoAntecedencia?: number; // em horas
   adminUserId?: string; // ID do admin para filtrar agendamentos
+  courtId?: string; // ID da quadra para filtrar agendamentos
   modalityDuration?: number; // duração da modalidade em minutos
   timeFormatInterval?: 30 | 60; // intervalo de horários (30min ou 60min)
 }
@@ -26,13 +27,14 @@ export const useAvailableHours = ({
   selectedDate,
   tempoMinimoAntecedencia = 24,
   adminUserId,
+  courtId,
   modalityDuration = 60,
   timeFormatInterval = 60
 }: UseAvailableHoursProps) => {
   const dateKey = format(selectedDate, 'yyyy-MM-dd');
   
   return useQuery({
-    queryKey: ['availableHours', adminUserId, dateKey, modalityDuration, timeFormatInterval],
+    queryKey: ['availableHours', adminUserId, courtId, dateKey, modalityDuration, timeFormatInterval],
     queryFn: async (): Promise<string[]> => {
       try {
         const dayOfWeek = format(selectedDate, 'EEEE').toLowerCase() as keyof WorkingHours;
