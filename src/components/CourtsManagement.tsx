@@ -327,8 +327,13 @@ const CourtsManagement = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} disabled={isDeleting}>
-              {isDeleting ? 'Excluindo...' : 'Excluir'}
+            <AlertDialogAction 
+              onClick={handleDeleteConfirm} 
+              disabled={isDeleting}
+              className="bg-red-600 hover:bg-red-700 text-white !text-white font-semibold shadow-md hover:shadow-lg transition-all border-0 min-w-[100px]"
+              style={{ color: 'white', backgroundColor: isDeleting ? '#9ca3af' : '#dc2626' }}
+            >
+              <span className="text-white font-medium">{isDeleting ? 'Excluindo...' : 'Excluir'}</span>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
