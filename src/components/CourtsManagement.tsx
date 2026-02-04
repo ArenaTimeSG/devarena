@@ -304,10 +304,10 @@ const CourtsManagement = () => {
               variant="default"
               onClick={handleUpdate} 
               disabled={isUpdating}
-              className="bg-blue-600 hover:bg-blue-700 text-white !text-white font-semibold shadow-md hover:shadow-lg transition-all border-0"
-              style={{ color: 'white' }}
+              className="bg-blue-600 hover:bg-blue-700 text-white !text-white font-semibold shadow-md hover:shadow-lg transition-all border-0 min-w-[100px]"
+              style={{ color: 'white', backgroundColor: '#2563eb' }}
             >
-              <span className="text-white">{isUpdating ? 'Atualizando...' : 'Atualizar'}</span>
+              <span className="text-white font-medium">{isUpdating ? 'Salvando...' : 'Salvar'}</span>
             </Button>
           </DialogFooter>
         </DialogContent>
