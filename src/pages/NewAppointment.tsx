@@ -26,6 +26,7 @@ const NewAppointment = () => {
     client_id: '',
     date: '',
     time: '',
+    end_time: '',
     modality: '',
   });
 
@@ -65,10 +66,20 @@ const NewAppointment = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.client_id || !formData.date || !formData.time || !formData.modality) {
+    if (!formData.client_id || !formData.date || !formData.time || !formData.end_time || !formData.modality) {
       toast({
         title: 'Erro no agendamento',
         description: 'Todos os campos são obrigatórios',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Validar que o horário de fim seja maior que o horário de início
+    if (formData.end_time <= formData.time) {
+      toast({
+        title: 'Erro no agendamento',
+        description: 'O horário de término deve ser maior que o horário de início',
         variant: 'destructive',
       });
       return;
@@ -85,12 +96,14 @@ const NewAppointment = () => {
 
       // Combine date and time
       const appointmentDateTime = new Date(`${formData.date}T${formData.time}`);
+      const appointmentEndDateTime = new Date(`${formData.date}T${formData.end_time}`);
 
       const { error } = await supabase
         .from('appointments')
         .insert({
           client_id: formData.client_id,
           date: appointmentDateTime.toISOString(),
+          end_time: appointmentEndDateTime.toISOString(),
           modality: formData.modality,
           status: 'agendado',
           user_id: user.id
@@ -241,7 +254,7 @@ const NewAppointment = () => {
 
                   <div className="space-y-3">
                     <Label htmlFor="time" className="text-sm font-semibold text-slate-700">
-                      Horário *
+                      Horário de Início *
                     </Label>
                     <Input
                       id="time"
@@ -252,6 +265,37 @@ const NewAppointment = () => {
                       className="h-12 text-base border-slate-200 focus:border-blue-300 focus:ring-blue-200 rounded-xl"
                     />
                   </div>
+                </div>
+
+                <div className="space-y-3">
+                  <Label htmlFor="end_time" className="text-sm font-semibold text-slate-700">
+                    Horário de Término *
+                  </Label>
+                  <Input
+                    id="end_time"
+                    type="time"
+                    value={formData.end_time}
+                    onChange={(e) => {
+                      const newEndTime = e.target.value;
+                      // Validar que end_time > start_time
+                      if (formData.time && newEndTime <= formData.time) {
+                        toast({
+                          title: 'Horário inválido',
+                          description: 'O horário de término deve ser maior que o horário de início',
+                          variant: 'destructive',
+                        });
+                        return;
+                      }
+                      handleChange('end_time', newEndTime);
+                    }}
+                    required
+                    className="h-12 text-base border-slate-200 focus:border-blue-300 focus:ring-blue-200 rounded-xl"
+                  />
+                  {formData.time && formData.end_time && formData.end_time <= formData.time && (
+                    <p className="text-sm text-red-600">
+                      O horário de término deve ser maior que o horário de início
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-3">
