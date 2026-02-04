@@ -400,15 +400,12 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                           
                           // Calcular posição vertical dentro da célula
                           const slotStartTime = slotStart.getTime();
-                          const aptStartTime = aptStart.getTime();
-                          
-                          let topOffset = 0;
-                          let height = totalHeight;
-                          
-                          const slotStartTime = slotStart.getTime();
                           const slotEndTime = slotEnd.getTime();
                           const aptStartTime = aptStart.getTime();
                           const aptEndTime = aptEnd.getTime();
+                          
+                          let topOffset = 0;
+                          let height = totalHeight;
                           
                           // Verificar se o agendamento começa antes desta célula
                           if (aptStartTime < slotStartTime) {
