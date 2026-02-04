@@ -479,7 +479,13 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                                 e.stopPropagation();
                                 onCellClick(day, timeSlot);
                               }}
-                              whileHover={{ scale: 1.02, zIndex: 30 }}
+                              onMouseEnter={(e) => {
+                                // Apenas atualizar zIndex no hover, sem scale para evitar bugs
+                                e.currentTarget.style.zIndex = '30';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.zIndex = '20';
+                              }}
                               transition={{ duration: 0.2 }}
                             >
                               <div style={{ 
@@ -591,6 +597,14 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                                 }}
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  
+                                  // Se a zona ocupa toda a célula (célula completamente vazia), usar hora cheia
+                                  if (zone.height >= hourCellHeight - 5) {
+                                    // Célula completa vazia - usar hora cheia
+                                    onCellClick(day, timeSlot);
+                                    return;
+                                  }
+                                  
                                   // Calcular o horário baseado na posição absoluta do clique dentro da célula completa
                                   // Obter a célula pai (td) para calcular a posição relativa
                                   const cellElement = e.currentTarget.closest('td') as HTMLElement;
