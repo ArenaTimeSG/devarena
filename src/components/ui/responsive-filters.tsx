@@ -79,6 +79,7 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
           <AnimatePresence>
             {isExpanded && (
               <motion.div
+                key="filters-expanded"
                 initial={{ height: 0, opacity: 0 }}
                 animate={{ height: 'auto', opacity: 1 }}
                 exit={{ height: 0, opacity: 0 }}
@@ -88,13 +89,17 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
                 <div className="p-4 space-y-4">
                   {/* Filtros */}
                   {filters.map((filter, index) => (
-                    <div key={index} className="space-y-2">
+                    <div key={`${filter.label}-${index}`} className="space-y-2">
                       <label className="text-sm font-medium text-slate-700">
                         {filter.label}
                       </label>
                       <Select 
+                        key={`select-mobile-${filter.label}-${filter.value}`}
                         value={filter.value} 
-                        onValueChange={filter.onValueChange}
+                        onValueChange={(value) => {
+                          console.log(`🎯 Select Mobile ${filter.label} - Valor mudou:`, value);
+                          filter.onValueChange(value);
+                        }}
                       >
                         <SelectTrigger className="border-slate-200 focus:border-blue-300">
                           <SelectValue />
@@ -159,13 +164,17 @@ const ResponsiveFilters: React.FC<ResponsiveFiltersProps> = ({
 
           {/* Filtros */}
           {filters.map((filter, index) => (
-            <div key={index} className="space-y-2">
+            <div key={`${filter.label}-${index}`} className="space-y-2">
               <label className="text-sm font-medium text-slate-700">
                 {filter.label}
               </label>
               <Select 
+                key={`select-${filter.label}-${filter.value}`}
                 value={filter.value} 
-                onValueChange={filter.onValueChange}
+                onValueChange={(value) => {
+                  console.log(`🎯 Select ${filter.label} - Valor mudou:`, value);
+                  filter.onValueChange(value);
+                }}
               >
                 <SelectTrigger className="border-slate-200 focus:border-blue-300">
                   <SelectValue />
