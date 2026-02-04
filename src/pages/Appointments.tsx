@@ -47,7 +47,7 @@ const Appointments = () => {
   const queryClient = useQueryClient();
   const { courts = [] } = useCourts();
   const [selectedCourtId, setSelectedCourtId] = useState<string | null>(null);
-  const { appointments, isLoading, refetch } = useAppointments({ courtId: selectedCourtId || undefined });
+  const { appointments, isLoading } = useAppointments({ courtId: selectedCourtId || undefined });
   
   const navigate = useNavigate();
   const [filteredAppointments, setFilteredAppointments] = useState<AppointmentWithModality[]>([]);
@@ -68,21 +68,18 @@ const Appointments = () => {
     }
   }, [user, loading, navigate]);
 
-  // Invalidar e refazer query quando a quadra selecionada mudar
+  // Invalidar todas as queries quando a quadra selecionada mudar
+  // O React Query automaticamente fará um novo fetch quando o queryKey mudar
   useEffect(() => {
     if (user?.id) {
       console.log('🔄 Appointments - Quadra selecionada mudou:', selectedCourtId);
-      // Remover todas as queries de appointments do cache para forçar novo fetch
-      queryClient.removeQueries({ 
+      // Invalidar todas as queries de appointments para garantir que sejam refeitas
+      queryClient.invalidateQueries({ 
         queryKey: ['appointments', user.id],
         exact: false 
       });
-      // Aguardar um tick para garantir que a remoção foi processada antes do refetch
-      setTimeout(() => {
-        refetch();
-      }, 0);
     }
-  }, [selectedCourtId, user?.id, queryClient, refetch]);
+  }, [selectedCourtId, user?.id, queryClient]);
 
   useEffect(() => {
     applyFilters();
@@ -377,7 +374,12 @@ const Appointments = () => {
                     label: court.name
                   }))
                 ],
-                onValueChange: (value) => setSelectedCourtId(value === 'all' ? null : value)
+                onValueChange: (value) => {
+                  console.log('🎯 Quadra selecionada no filtro:', value);
+                  const newCourtId = value === 'all' ? null : value;
+                  console.log('🎯 Novo courtId:', newCourtId);
+                  setSelectedCourtId(newCourtId);
+                }
               },
               {
                 label: "Status",
