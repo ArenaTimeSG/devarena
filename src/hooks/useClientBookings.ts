@@ -28,8 +28,10 @@ export interface CreateClientBookingData {
     email: string;
     phone?: string;
   };
+  court_id?: string; // ID da quadra
   date: string;
   modality: string;
+  modality_id?: string; // ID da modalidade
   valor_total: number;
   payment_policy?: 'sem_pagamento' | 'opcional';
 }
@@ -235,7 +237,7 @@ export const useClientBookings = (adminUserId?: string) => {
       });
 
 
-      const appointmentData = {
+      const appointmentData: any = {
         user_id: bookingData.user_id,
         date: bookingData.date,
         status: appointmentStatus,
@@ -248,6 +250,11 @@ export const useClientBookings = (adminUserId?: string) => {
 
       // Adicionar client_id ao agendamento
       appointmentData.client_id = clientId;
+      
+      // Adicionar court_id se fornecido
+      if (bookingData.court_id) {
+        appointmentData.court_id = bookingData.court_id;
+      }
 
       console.log('🔍 useClientBookings: Criando agendamento:', {
         clientId: clientId,
