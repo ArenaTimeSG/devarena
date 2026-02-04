@@ -103,11 +103,12 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
       whileTap={{ y: 0 }}
       transition={{ duration: 0.2 }}
       className={`
-        relative overflow-hidden rounded-lg cursor-pointer p-1 h-full w-full max-h-[56px]
+        relative overflow-hidden rounded-lg cursor-pointer p-1 h-full w-full
         bg-gradient-to-br ${gradientClass} text-white
         shadow-md hover:shadow-lg transition-all duration-200
         border-0 backdrop-blur-sm
       `}
+      style={{ minHeight: '56px', height: '100%' }}
       onClick={onClick}
     >
       {/* Background Pattern */}

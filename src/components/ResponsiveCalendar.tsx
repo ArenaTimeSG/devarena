@@ -364,6 +364,21 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                       return aptStartTime >= slotStartTime && aptStartTime < slotEndTime;
                     });
                     
+                    // Verificar se há agendamentos atravessando esta célula (que começaram em células anteriores)
+                    // Esses agendamentos não serão renderizados aqui, mas precisamos criar zonas clicáveis para áreas vazias
+                    const crossingAppointments = allDayAppointments.filter((appointment) => {
+                      if (!appointment) return false;
+                      const aptStart = new Date(appointment.date);
+                      const aptEnd = appointment.end_time ? new Date(appointment.end_time) : new Date(aptStart.getTime() + 60 * 60 * 1000);
+                      const aptStartTime = aptStart.getTime();
+                      const aptEndTime = aptEnd.getTime();
+                      const slotStartTime = slotStart.getTime();
+                      const slotEndTime = slotEnd.getTime();
+                      
+                      // Agendamento atravessa esta célula mas começou antes
+                      return aptStartTime < slotStartTime && aptEndTime > slotStartTime && aptEndTime <= slotEndTime;
+                    });
+                    
                     return (
                       <motion.td 
                         key={j} 
@@ -443,6 +458,9 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                           const width = 'calc(100% - 4px)';
                           const left = '2px';
                           
+                          // Verificar se o agendamento atravessa múltiplas células
+                          const crossesCells = aptEndTime > slotEndTime;
+                          
                           return (
                             <motion.div
                               key={`${appointment.id}-${timeSlot}-${day.toISOString()}`}
@@ -455,6 +473,7 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                                 minHeight: '18px',
                                 pointerEvents: 'auto', // Permitir cliques no agendamento
                                 zIndex: 20, // Garantir que está acima do fundo mas permite cliques em áreas vazias
+                                backgroundColor: 'transparent', // Garantir que não fique transparente
                               }}
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -463,26 +482,36 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                               whileHover={{ scale: 1.02, zIndex: 30 }}
                               transition={{ duration: 0.2 }}
                             >
-                              <AppointmentCard
-                                appointment={appointment}
-                                onClick={() => onCellClick(day, timeSlot)}
-                                getStatusColor={getStatusColor}
-                                getStatusLabel={getStatusLabel}
-                                date={appointment.date}
-                              />
+                              <div style={{ 
+                                height: '100%', 
+                                width: '100%',
+                                display: 'flex',
+                                flexDirection: 'column'
+                              }}>
+                                <AppointmentCard
+                                  appointment={appointment}
+                                  onClick={() => onCellClick(day, timeSlot)}
+                                  getStatusColor={getStatusColor}
+                                  getStatusLabel={getStatusLabel}
+                                  date={appointment.date}
+                                />
+                              </div>
                             </motion.div>
                           );
                         })}
                         
                         {/* Áreas clicáveis vazias - dividir célula em zonas clicáveis para permitir cliques em áreas não ocupadas */}
-                        {appointmentsToRender.length > 0 && (() => {
+                        {(() => {
                           const hourCellHeight = 64; // Altura da célula de 1 hora
                           // Criar zonas clicáveis para áreas vazias da célula
                           const zones: Array<{ top: number; height: number }> = [];
                           let currentTop = 0;
                           
+                          // Combinar agendamentos que começam aqui e os que atravessam
+                          const allAppointmentsInCell = [...appointmentsToRender, ...crossingAppointments];
+                          
                           // Ordenar agendamentos por horário de início
-                          const sortedAppointments = [...appointmentsToRender].sort((a, b) => {
+                          const sortedAppointments = allAppointmentsInCell.sort((a, b) => {
                             if (!a || !b) return 0;
                             return new Date(a.date).getTime() - new Date(b.date).getTime();
                           });
@@ -500,18 +529,24 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                             let appointmentHeight = hourCellHeight;
                             
                             if (aptStartTime < slotStartTime) {
+                              // Agendamento atravessa esta célula (começou antes)
                               appointmentTop = 0;
                               if (aptEndTime <= slotEndTime) {
+                                // Termina dentro desta célula
                                 const minutesFromSlotStart = (aptEndTime - slotStartTime) / (60 * 1000);
                                 appointmentHeight = (minutesFromSlotStart / 60) * hourCellHeight;
                               } else {
+                                // Atravessa além desta célula - ocupar toda a célula atual
                                 appointmentHeight = hourCellHeight;
                               }
                             } else {
+                              // Agendamento começa dentro desta célula
                               appointmentTop = calculateAppointmentTopOffset(aptStart, hourCellHeight);
                               if (aptEndTime <= slotEndTime) {
+                                // Termina dentro desta célula
                                 appointmentHeight = calculateAppointmentHeight(aptStart, aptEnd, hourCellHeight);
                               } else {
+                                // Atravessa além desta célula - ocupar até o fim da célula atual
                                 appointmentHeight = hourCellHeight - appointmentTop;
                               }
                             }
@@ -533,6 +568,14 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                             zones.push({
                               top: currentTop,
                               height: hourCellHeight - currentTop
+                            });
+                          }
+                          
+                          // Se não há agendamentos, toda a célula é clicável
+                          if (allAppointmentsInCell.length === 0) {
+                            zones.push({
+                              top: 0,
+                              height: hourCellHeight
                             });
                           }
                           
