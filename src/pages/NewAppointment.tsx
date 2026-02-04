@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useModalities } from '@/hooks/useModalities';
 import { CalendarPlus, ArrowLeft, Loader2 } from 'lucide-react';
 
 interface Client {
@@ -20,6 +21,7 @@ const NewAppointment = () => {
   const { user, loading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { modalities = [] } = useModalities();
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -27,10 +29,8 @@ const NewAppointment = () => {
     date: '',
     time: '',
     end_time: '',
-    modality: '',
+    modality_id: '',
   });
-
-  const modalities = ['Vôlei', 'Futsal', 'Basquete', 'Tênis', 'Padel'];
 
   useEffect(() => {
     if (!loading && !user) {
@@ -66,7 +66,7 @@ const NewAppointment = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.client_id || !formData.date || !formData.time || !formData.end_time || !formData.modality) {
+    if (!formData.client_id || !formData.date || !formData.time || !formData.end_time || !formData.modality_id) {
       toast({
         title: 'Erro no agendamento',
         description: 'Todos os campos são obrigatórios',
@@ -104,7 +104,7 @@ const NewAppointment = () => {
           client_id: formData.client_id,
           date: appointmentDateTime.toISOString(),
           end_time: appointmentEndDateTime.toISOString(),
-          modality: formData.modality,
+          modality_id: formData.modality_id,
           status: 'agendado',
           user_id: user.id
         });
@@ -302,18 +302,36 @@ const NewAppointment = () => {
                   <Label htmlFor="modality" className="text-sm font-semibold text-slate-700">
                     Modalidade *
                   </Label>
-                  <Select value={formData.modality} onValueChange={(value) => handleChange('modality', value)}>
+                  <Select value={formData.modality_id} onValueChange={(value) => handleChange('modality_id', value)}>
                     <SelectTrigger className="h-12 text-base border-slate-200 focus:border-blue-300 focus:ring-blue-200 rounded-xl">
                       <SelectValue placeholder="Selecione uma modalidade" />
                     </SelectTrigger>
                     <SelectContent className="bg-white/95 backdrop-blur-xl border border-slate-200 rounded-xl shadow-xl">
-                      {modalities.map((modality) => (
-                        <SelectItem key={modality} value={modality} className="py-3">
-                          {modality}
+                      {modalities.length === 0 ? (
+                        <SelectItem value="empty" disabled>
+                          Nenhuma modalidade cadastrada
                         </SelectItem>
-                      ))}
+                      ) : (
+                        modalities.map((modality) => (
+                          <SelectItem key={modality.id} value={modality.id} className="py-3">
+                            {modality.name} – R$ {modality.valor.toFixed(2).replace('.', ',')}
+                          </SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
+                  {modalities.length === 0 && (
+                    <p className="text-sm text-slate-600">
+                      <Button
+                        type="button"
+                        variant="link"
+                        className="h-auto p-0 text-blue-600 hover:text-blue-700 font-medium"
+                        onClick={() => navigate('/modalities')}
+                      >
+                        Cadastre uma modalidade primeiro
+                      </Button>
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-6">
@@ -327,7 +345,7 @@ const NewAppointment = () => {
                   </Button>
                   <Button
                     type="submit"
-                    disabled={isLoading || clients.length === 0}
+                    disabled={isLoading || clients.length === 0 || modalities.length === 0}
                     className="flex-1 h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
