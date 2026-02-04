@@ -89,12 +89,28 @@ const NewAppointmentModal = ({
         isOpen
       });
       
-      // Converter horário selecionado (HH:mm) para start_time e calcular end_time (+1h)
+      // Converter horário selecionado (HH:mm) para start_time e calcular end_time
       const startTime = selectedTime || '08:00';
       const [hours, minutes] = startTime.split(':').map(Number);
       const startDate = new Date(selectedDate);
       startDate.setHours(hours, minutes || 0, 0, 0);
-      const endDate = addHours(startDate, 1);
+      
+      // Calcular end_time de forma inteligente:
+      // - Se o horário começa na segunda metade da célula (minutos >= 30), 
+      //   terminar no fim da célula atual (hora cheia seguinte)
+      // - Caso contrário, adicionar 1 hora completa
+      let endTime: string;
+      if (minutes >= 30) {
+        // Começa na segunda metade: terminar na hora cheia seguinte
+        // Ex: 19:30 -> 20:00, 18:45 -> 19:00
+        const nextHour = hours + 1;
+        endTime = `${String(nextHour).padStart(2, '0')}:00`;
+      } else {
+        // Começa na primeira metade ou hora cheia: adicionar 1 hora
+        // Ex: 19:00 -> 20:00, 19:15 -> 20:15
+        const endDate = addHours(startDate, 1);
+        endTime = format(endDate, 'HH:mm');
+      }
       
       // Atualizar formData com os dados selecionados
       const newFormData = {
@@ -102,7 +118,7 @@ const NewAppointmentModal = ({
         modality_id: '',
         date: format(selectedDate, 'yyyy-MM-dd'),
         start_time: startTime, // Horário de início selecionado
-        end_time: format(endDate, 'HH:mm'), // Horário de fim (início + 1h por padrão)
+        end_time: endTime, // Horário de fim calculado inteligentemente
         isRecurring: false,
         recurrenceType: 'data_final' as 'data_final' | 'repeticoes' | 'indeterminado',
         endDate: '',
