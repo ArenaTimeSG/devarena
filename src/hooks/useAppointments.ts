@@ -121,6 +121,8 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
     queryKey: ['appointments', user?.id, courtId || 'all'],
     staleTime: 1000 * 60, // 1 minuto (aumentado para reduzir requisições)
     gcTime: 1000 * 60 * 5, // 5 minutos de cache (aumentado)
+    refetchOnMount: true, // Sempre refazer query quando o componente montar
+    refetchOnWindowFocus: false, // Não refazer quando a janela ganhar foco
     queryFn: async (): Promise<AppointmentWithModality[]> => {
       if (!user?.id) {
         throw new Error('Usuário não autenticado');

@@ -45,7 +45,7 @@ const Appointments = () => {
   const { toast } = useToast();
   const { courts = [] } = useCourts();
   const [selectedCourtId, setSelectedCourtId] = useState<string | null>(null);
-  const { appointments, isLoading } = useAppointments({ courtId: selectedCourtId || undefined });
+  const { appointments, isLoading, refetch } = useAppointments({ courtId: selectedCourtId || undefined });
   
   const navigate = useNavigate();
   const [filteredAppointments, setFilteredAppointments] = useState<AppointmentWithModality[]>([]);
@@ -66,11 +66,13 @@ const Appointments = () => {
     }
   }, [user, loading, navigate]);
 
+  // Forçar refetch quando a quadra selecionada mudar
   useEffect(() => {
     if (user) {
-      // Os agendamentos são carregados automaticamente pelo hook useAppointments
+      console.log('🔄 Appointments - Quadra selecionada mudou:', selectedCourtId);
+      refetch();
     }
-  }, [user, selectedMonth]);
+  }, [selectedCourtId, user, refetch]);
 
   useEffect(() => {
     applyFilters();
