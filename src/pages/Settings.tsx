@@ -8,6 +8,7 @@ import ResponsiveTabs from '@/components/ui/responsive-tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/hooks/useAuth';
@@ -15,7 +16,7 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { useSettings } from '@/hooks/useSettings';
 import { useClientBookings } from '@/hooks/useClientBookings';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Clock, Bell, User, Shield, Settings as SettingsIcon, Palette, Save, AlertCircle, Calendar, Globe, Info, Building2 } from 'lucide-react';
+import { ArrowLeft, Clock, Bell, User, Shield, Settings as SettingsIcon, Palette, Save, AlertCircle, Calendar, Globe, Info, Building2, MessageSquare, RotateCcw } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import ChangePasswordModal from '@/components/ChangePasswordModal';
 import { ToggleAgendamento } from '@/components/booking-settings/ToggleAgendamento';
@@ -53,6 +54,15 @@ const Settings = () => {
       }
     }
     
+    if (activeTab === 'notifications' && hasTemplateChanges) {
+      const confirmed = window.confirm(
+        'Você tem alterações não salvas nos templates de mensagens. Deseja sair mesmo assim?'
+      );
+      if (!confirmed) {
+        return;
+      }
+    }
+    
     setActiveTab(newTab);
   };
 
@@ -84,6 +94,36 @@ const Settings = () => {
       payment: boolean;
     };
   });
+
+  // Estado para templates de mensagens WhatsApp
+  const [whatsappTemplates, setWhatsappTemplates] = useState({
+    appointment_reminder: `Olá, {nome}!
+
+Lembrete do seu agendamento:
+📅 Data: {data}
+🕐 Horário: {horario}
+🏀 Atividade: {modalidade}
+📍 Local: {local}
+
+Por favor, confirme sua presença respondendo:
+[1] Confirmo
+[2] Não poderei comparecer
+
+Agradecemos a confirmação!`,
+    monthly_agenda: `Olá, {nome}!
+
+📅 Lembrete da sua agenda mensal:
+
+{eventos}
+
+Por favor, confirme sua presença respondendo:
+[1] Confirmo
+[2] Não poderei comparecer
+
+Agradecemos a confirmação!`
+  });
+
+  const [hasTemplateChanges, setHasTemplateChanges] = useState(false);
   
   // Estado local para dados pessoais (não salva automaticamente)
   const [personalData, setPersonalData] = useState({
@@ -187,6 +227,46 @@ const Settings = () => {
         tempoMinimoAntecedencia: settings.online_booking?.tempo_minimo_antecedencia ?? 24,
         duracaoPadrao: settings.online_booking?.duracao_padrao ?? 60
       }));
+
+      // Carregar templates de WhatsApp
+      const defaultTemplates = {
+        appointment_reminder: `Olá, {nome}!
+
+Lembrete do seu agendamento:
+📅 Data: {data}
+🕐 Horário: {horario}
+🏀 Atividade: {modalidade}
+📍 Local: {local}
+
+Por favor, confirme sua presença respondendo:
+[1] Confirmo
+[2] Não poderei comparecer
+
+Agradecemos a confirmação!`,
+        monthly_agenda: `Olá, {nome}!
+
+📅 Lembrete da sua agenda mensal:
+
+{eventos}
+
+Por favor, confirme sua presença respondendo:
+[1] Confirmo
+[2] Não poderei comparecer
+
+Agradecemos a confirmação!`
+      };
+
+      if (settings.whatsapp_templates) {
+        setWhatsappTemplates({
+          appointment_reminder: settings.whatsapp_templates.appointment_reminder || defaultTemplates.appointment_reminder,
+          monthly_agenda: settings.whatsapp_templates.monthly_agenda || defaultTemplates.monthly_agenda
+        });
+        setHasTemplateChanges(false);
+      } else {
+        // Se não existir templates salvos, usar os padrões
+        setWhatsappTemplates(defaultTemplates);
+        setHasTemplateChanges(false);
+      }
     }
   }, [settings, profile, user]);
 
@@ -288,6 +368,71 @@ const Settings = () => {
         variant: 'destructive',
       });
     }
+  };
+
+  // Função para atualizar templates de WhatsApp
+  const handleTemplateChange = (templateType: 'appointment_reminder' | 'monthly_agenda', value: string) => {
+    setWhatsappTemplates(prev => ({
+      ...prev,
+      [templateType]: value
+    }));
+    setHasTemplateChanges(true);
+  };
+
+  // Função para salvar templates de WhatsApp
+  const handleSaveTemplates = async () => {
+    try {
+      await updateSettings({ whatsapp_templates: whatsappTemplates });
+      setHasTemplateChanges(false);
+      toast({
+        title: 'Templates salvos!',
+        description: 'As mensagens de lembrete foram atualizadas com sucesso.',
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error('Erro ao salvar templates:', error);
+      toast({
+        title: 'Erro ao salvar',
+        description: 'Não foi possível salvar os templates. Tente novamente.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Função para restaurar template padrão
+  const handleResetTemplate = (templateType: 'appointment_reminder' | 'monthly_agenda') => {
+    const defaultTemplates = {
+      appointment_reminder: `Olá, {nome}!
+
+Lembrete do seu agendamento:
+📅 Data: {data}
+🕐 Horário: {horario}
+🏀 Atividade: {modalidade}
+📍 Local: {local}
+
+Por favor, confirme sua presença respondendo:
+[1] Confirmo
+[2] Não poderei comparecer
+
+Agradecemos a confirmação!`,
+      monthly_agenda: `Olá, {nome}!
+
+📅 Lembrete da sua agenda mensal:
+
+{eventos}
+
+Por favor, confirme sua presença respondendo:
+[1] Confirmo
+[2] Não poderei comparecer
+
+Agradecemos a confirmação!`
+    };
+
+    setWhatsappTemplates(prev => ({
+      ...prev,
+      [templateType]: defaultTemplates[templateType]
+    }));
+    setHasTemplateChanges(true);
   };
 
   // Função para atualizar dados pessoais (apenas no estado local)
@@ -718,43 +863,106 @@ const Settings = () => {
             <TabsContent value="notifications" className="space-y-6">
               <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-xl rounded-2xl overflow-hidden">
                 <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 border-b border-slate-200/60 p-6">
-                  <CardTitle className="text-xl font-bold text-slate-800">Configurações de Notificações</CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 space-y-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-base font-medium text-slate-700">Notificações por Email</Label>
-                      <p className="text-sm text-slate-600">
-                        Receba lembretes de agendamentos por email
-                      </p>
+                    <div className="flex items-center gap-3">
+                      <MessageSquare className="h-6 w-6 text-blue-600" />
+                      <CardTitle className="text-xl font-bold text-slate-800">Editor de Mensagens WhatsApp</CardTitle>
                     </div>
-                    <Switch 
-                      checked={notifications.email}
-                      onCheckedChange={(checked) => handleNotificationChange('email', checked)}
-                      className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                    />
+                    {hasTemplateChanges && (
+                      <div className="flex items-center gap-2 px-3 py-1 bg-orange-100 rounded-lg border border-orange-200">
+                        <div className="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                        <span className="text-sm text-orange-700 font-medium">Alterações não salvas</span>
+                      </div>
+                    )}
                   </div>
-                  
+                  <CardDescription className="mt-2 text-slate-600">
+                    Personalize as mensagens de lembrete enviadas via WhatsApp. Use variáveis como {'{nome}'}, {'{data}'}, {'{horario}'}, {'{modalidade}'}, {'{local}'} e {'{eventos}'}.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-6 space-y-8">
+                  {/* Template 1: Lembrete de Agendamento */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-base font-semibold text-slate-800">Lembrete de Agendamento de Horários</Label>
+                        <p className="text-sm text-slate-600 mt-1">
+                          Mensagem enviada para lembretes de agendamentos individuais
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleResetTemplate('appointment_reminder')}
+                        className="text-slate-600 hover:text-slate-800"
+                      >
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        Restaurar Padrão
+                      </Button>
+                    </div>
+                    <Textarea
+                      value={whatsappTemplates.appointment_reminder}
+                      onChange={(e) => handleTemplateChange('appointment_reminder', e.target.value)}
+                      className="min-h-[200px] font-mono text-sm border-slate-200 focus:border-blue-300"
+                      placeholder="Digite sua mensagem personalizada..."
+                    />
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="text-xs font-medium text-blue-800 mb-2">Variáveis disponíveis:</p>
+                      <div className="flex flex-wrap gap-2 text-xs text-blue-700">
+                        <code className="bg-blue-100 px-2 py-1 rounded">{'{nome}'}</code>
+                        <code className="bg-blue-100 px-2 py-1 rounded">{'{data}'}</code>
+                        <code className="bg-blue-100 px-2 py-1 rounded">{'{horario}'}</code>
+                        <code className="bg-blue-100 px-2 py-1 rounded">{'{modalidade}'}</code>
+                        <code className="bg-blue-100 px-2 py-1 rounded">{'{local}'}</code>
+                      </div>
+                    </div>
+                  </div>
+
                   <Separator className="bg-slate-200" />
 
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <Label className="text-base font-medium text-slate-700">Lembretes de Agendamentos (clientes)</Label>
-                      <p className="text-sm text-slate-600">
-                        Enviar lembretes para clientes sobre novos agendamentos e atualizações
-                      </p>
+                  {/* Template 2: Agenda Mensal */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-base font-semibold text-slate-800">Lembrete de Agenda Mensal</Label>
+                        <p className="text-sm text-slate-600 mt-1">
+                          Mensagem enviada para lembretes de eventos mensais recorrentes
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleResetTemplate('monthly_agenda')}
+                        className="text-slate-600 hover:text-slate-800"
+                      >
+                        <RotateCcw className="h-4 w-4 mr-2" />
+                        Restaurar Padrão
+                      </Button>
                     </div>
-                    <Switch 
-                      checked={notifications.alerts?.booking || false}
-                      onCheckedChange={(checked) => {
-                        const updatedAlerts = {
-                          ...notifications.alerts,
-                          booking: checked
-                        };
-                        handleNotificationChange('alerts', updatedAlerts);
-                      }}
-                      className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                    <Textarea
+                      value={whatsappTemplates.monthly_agenda}
+                      onChange={(e) => handleTemplateChange('monthly_agenda', e.target.value)}
+                      className="min-h-[200px] font-mono text-sm border-slate-200 focus:border-blue-300"
+                      placeholder="Digite sua mensagem personalizada..."
                     />
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="text-xs font-medium text-blue-800 mb-2">Variáveis disponíveis:</p>
+                      <div className="flex flex-wrap gap-2 text-xs text-blue-700">
+                        <code className="bg-blue-100 px-2 py-1 rounded">{'{nome}'}</code>
+                        <code className="bg-blue-100 px-2 py-1 rounded">{'{eventos}'}</code>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Botão Salvar */}
+                  <div className="flex justify-end pt-4 border-t border-slate-200">
+                    <Button
+                      onClick={handleSaveTemplates}
+                      disabled={!hasTemplateChanges}
+                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                    >
+                      <Save className="h-4 w-4 mr-2" />
+                      Salvar Alterações
+                    </Button>
                   </div>
                 </CardContent>
               </Card>

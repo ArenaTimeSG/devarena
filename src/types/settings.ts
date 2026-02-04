@@ -49,6 +49,11 @@ export interface OnlineBookingConfig {
   duracao_padrao: number;
 }
 
+export interface WhatsAppTemplates {
+  appointment_reminder: string; // Modelo para lembrete de agendamento de horários
+  monthly_agenda: string; // Modelo para lembrete de agenda mensal
+}
+
 export interface Settings {
   id?: string;
   user_id?: string;
@@ -67,6 +72,7 @@ export interface Settings {
   mercado_pago_public_key?: string;
   mercado_pago_webhook_url?: string;
   mercado_pago_enabled?: boolean;
+  whatsapp_templates?: WhatsAppTemplates;
   created_at?: string;
   updated_at?: string;
 }
@@ -118,7 +124,33 @@ export const DEFAULT_SETTINGS: Omit<Settings, 'id' | 'user_id' | 'created_at' | 
     duracao_padrao: 60
   },
   payment_policy: 'sem_pagamento',
-  mercado_pago_enabled: false
+  mercado_pago_enabled: false,
+  whatsapp_templates: {
+    appointment_reminder: `Olá, {nome}!
+
+Lembrete do seu agendamento:
+📅 Data: {data}
+🕐 Horário: {horario}
+🏀 Atividade: {modalidade}
+📍 Local: {local}
+
+Por favor, confirme sua presença respondendo:
+[1] Confirmo
+[2] Não poderei comparecer
+
+Agradecemos a confirmação!`,
+    monthly_agenda: `Olá, {nome}!
+
+📅 Lembrete da sua agenda mensal:
+
+{eventos}
+
+Por favor, confirme sua presença respondendo:
+[1] Confirmo
+[2] Não poderei comparecer
+
+Agradecemos a confirmação!`
+  }
 };
 
 // Modality names mapping

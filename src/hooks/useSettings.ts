@@ -27,6 +27,7 @@ const getSafeSettings = (settings: Settings | null): Settings => {
     mercado_pago_public_key: settings.mercado_pago_public_key || '',
     mercado_pago_webhook_url: settings.mercado_pago_webhook_url || '',
     mercado_pago_enabled: settings.mercado_pago_enabled ?? DEFAULT_SETTINGS.mercado_pago_enabled,
+    whatsapp_templates: settings.whatsapp_templates || DEFAULT_SETTINGS.whatsapp_templates,
     id: settings.id,
     user_id: settings.user_id,
     created_at: settings.created_at,
