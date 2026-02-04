@@ -721,7 +721,7 @@ Agradecemos a confirmação!`
                 { value: "courts", label: "Quadras", icon: <Building2 className="h-4 w-4" /> },
                 { value: "modalities", label: "Modalidades", icon: <Calendar className="h-4 w-4" /> },
                 { value: "online-booking", label: "Agendamento Online", icon: <Globe className="h-4 w-4" /> },
-                { value: "notifications", label: "Notificações", icon: <Bell className="h-4 w-4" /> },
+                { value: "notifications", label: "Lembretes", icon: <Bell className="h-4 w-4" /> },
                 { value: "security", label: "Segurança", icon: <Shield className="h-4 w-4" /> },
               ]}
               value={activeTab}
@@ -872,7 +872,7 @@ Agradecemos a confirmação!`
                </div>
              </TabsContent>
 
-            {/* Aba Notificações */}
+            {/* Aba Lembretes */}
             <TabsContent value="notifications" className="space-y-6">
               <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-xl rounded-2xl overflow-hidden">
                 <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 border-b border-slate-200/60 p-6">
