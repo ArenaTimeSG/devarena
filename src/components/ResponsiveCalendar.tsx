@@ -473,18 +473,10 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                                 minHeight: '18px',
                                 pointerEvents: 'auto', // Permitir cliques no agendamento
                                 zIndex: 20, // Garantir que está acima do fundo mas permite cliques em áreas vazias
-                                backgroundColor: 'transparent', // Garantir que não fique transparente
                               }}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onCellClick(day, timeSlot);
-                              }}
-                              onMouseEnter={(e) => {
-                                // Apenas atualizar zIndex no hover, sem scale para evitar bugs
-                                e.currentTarget.style.zIndex = '30';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.zIndex = '20';
                               }}
                               transition={{ duration: 0.2 }}
                             >
@@ -598,21 +590,26 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   
-                                  // Se a zona ocupa toda a célula (célula completamente vazia), usar hora cheia
-                                  if (zone.height >= hourCellHeight - 5) {
-                                    // Célula completa vazia - usar hora cheia
-                                    onCellClick(day, timeSlot);
-                                    return;
-                                  }
-                                  
-                                  // Calcular o horário baseado na posição absoluta do clique dentro da célula completa
-                                  // Obter a célula pai (td) para calcular a posição relativa
+                                  // Verificar se a célula está completamente vazia (sem agendamentos)
                                   const cellElement = e.currentTarget.closest('td') as HTMLElement;
                                   if (!cellElement) {
                                     onCellClick(day, timeSlot);
                                     return;
                                   }
                                   
+                                  // Se a zona começa no topo (top === 0) e ocupa toda ou quase toda a célula, usar hora cheia
+                                  const isFullCell = zone.top === 0 && zone.height >= hourCellHeight - 10;
+                                  
+                                  // Também verificar se não há agendamentos na célula
+                                  const hasAppointmentsInCell = allAppointmentsInCell.length > 0;
+                                  
+                                  if (isFullCell && !hasAppointmentsInCell) {
+                                    // Célula completamente vazia - usar hora cheia
+                                    onCellClick(day, timeSlot);
+                                    return;
+                                  }
+                                  
+                                  // Calcular o horário baseado na posição absoluta do clique dentro da célula completa
                                   const cellRect = cellElement.getBoundingClientRect();
                                   const clickYRelativeToCell = e.clientY - cellRect.top;
                                   

@@ -96,18 +96,23 @@ const NewAppointmentModal = ({
       startDate.setHours(hours, minutes || 0, 0, 0);
       
       // Calcular end_time de forma inteligente:
-      // - Se o horário começa na segunda metade da célula (minutos >= 30), 
-      //   terminar no fim da célula atual (hora cheia seguinte)
+      // - Se minutos === 0 (hora cheia), sempre adicionar 1 hora completa
+      // - Se minutos >= 30, terminar na hora cheia seguinte
       // - Caso contrário, adicionar 1 hora completa
       let endTime: string;
-      if (minutes >= 30) {
+      if (minutes === 0) {
+        // Hora cheia - sempre adicionar 1 hora completa
+        // Ex: 13:00 -> 14:00, 19:00 -> 20:00
+        const nextHour = hours + 1;
+        endTime = `${String(nextHour).padStart(2, '0')}:00`;
+      } else if (minutes >= 30) {
         // Começa na segunda metade: terminar na hora cheia seguinte
         // Ex: 19:30 -> 20:00, 18:45 -> 19:00
         const nextHour = hours + 1;
         endTime = `${String(nextHour).padStart(2, '0')}:00`;
       } else {
-        // Começa na primeira metade ou hora cheia: adicionar 1 hora
-        // Ex: 19:00 -> 20:00, 19:15 -> 20:15
+        // Começa na primeira metade: adicionar 1 hora completa
+        // Ex: 19:15 -> 20:15
         const endDate = addHours(startDate, 1);
         endTime = format(endDate, 'HH:mm');
       }

@@ -96,20 +96,21 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      whileHover={{ 
-        y: -2,
-        boxShadow: "0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)"
-      }}
-      whileTap={{ y: 0 }}
-      transition={{ duration: 0.2 }}
       className={`
         relative overflow-hidden rounded-lg cursor-pointer p-1 h-full w-full
         bg-gradient-to-br ${gradientClass} text-white
-        shadow-md hover:shadow-lg transition-all duration-200
+        shadow-md hover:shadow-lg transition-shadow duration-200
         border-0 backdrop-blur-sm
       `}
       style={{ minHeight: '56px', height: '100%' }}
       onClick={onClick}
+      onMouseEnter={(e) => {
+        // Apenas atualizar sombra no hover, sem animações que causam bugs
+        e.currentTarget.style.boxShadow = "0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = "";
+      }}
     >
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-10">
