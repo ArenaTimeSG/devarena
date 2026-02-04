@@ -72,13 +72,17 @@ const Appointments = () => {
   useEffect(() => {
     if (user?.id) {
       console.log('🔄 Appointments - Quadra selecionada mudou:', selectedCourtId);
-      // Invalidar todas as queries de appointments para forçar refetch
-      queryClient.invalidateQueries({ 
+      // Remover todas as queries de appointments do cache para forçar novo fetch
+      queryClient.removeQueries({ 
         queryKey: ['appointments', user.id],
         exact: false 
       });
+      // Aguardar um tick para garantir que a remoção foi processada antes do refetch
+      setTimeout(() => {
+        refetch();
+      }, 0);
     }
-  }, [selectedCourtId, user?.id, queryClient]);
+  }, [selectedCourtId, user?.id, queryClient, refetch]);
 
   useEffect(() => {
     applyFilters();
