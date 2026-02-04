@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
@@ -66,6 +66,11 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const { courtId } = options || {};
+  
+  // Log quando courtId mudar
+  useEffect(() => {
+    console.log('🔄 useAppointments - courtId mudou:', courtId);
+  }, [courtId]);
 
   // Função otimizada para buscar dados relacionados
   const fetchRelatedData = useCallback(async (appointments: any[]) => {

@@ -49,6 +49,11 @@ const Appointments = () => {
   const [selectedCourtId, setSelectedCourtId] = useState<string | null>(null);
   const { appointments, isLoading } = useAppointments({ courtId: selectedCourtId || undefined });
   
+  // Log quando appointments mudar
+  useEffect(() => {
+    console.log('🔄 Appointments - appointments atualizado:', appointments.length, 'courtId:', selectedCourtId);
+  }, [appointments, selectedCourtId]);
+  
   const navigate = useNavigate();
   const [filteredAppointments, setFilteredAppointments] = useState<AppointmentWithModality[]>([]);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
@@ -73,6 +78,8 @@ const Appointments = () => {
   useEffect(() => {
     if (user?.id) {
       console.log('🔄 Appointments - Quadra selecionada mudou:', selectedCourtId);
+      // Limpar filteredAppointments imediatamente para mostrar estado de loading
+      setFilteredAppointments([]);
       // Invalidar todas as queries de appointments para garantir que sejam refeitas
       queryClient.invalidateQueries({ 
         queryKey: ['appointments', user.id],
@@ -82,6 +89,7 @@ const Appointments = () => {
   }, [selectedCourtId, user?.id, queryClient]);
 
   useEffect(() => {
+    console.log('🔄 applyFilters - appointments mudou:', appointments.length, 'courtId:', selectedCourtId);
     applyFilters();
   }, [appointments, searchTerm, statusFilter, modalityFilter, selectedMonth, selectedCourtId]);
 
@@ -103,7 +111,9 @@ const Appointments = () => {
   };
 
   const applyFilters = () => {
+    console.log('🔄 applyFilters - Iniciando filtros. Total appointments:', appointments.length);
     let filtered = getAppointmentsForSelectedMonth();
+    console.log('🔄 applyFilters - Após filtro de mês:', filtered.length);
 
     // Filtro por termo de busca (nome do cliente)
     if (searchTerm) {
@@ -121,7 +131,10 @@ const Appointments = () => {
     if (modalityFilter !== 'all') {
       filtered = filtered.filter(apt => apt.modality_info?.name === modalityFilter);
     }
+    
+    console.log('🔄 applyFilters - Resultado final:', filtered.length);
 
+    console.log('🔄 applyFilters - Atualizando filteredAppointments:', filtered.length);
     setFilteredAppointments(filtered);
   };
 
