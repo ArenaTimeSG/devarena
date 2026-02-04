@@ -341,7 +341,9 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                     const allDayAppointments = dayAppointments.length > 0 ? dayAppointments : (fallbackAppointment ? [fallbackAppointment] : []);
                     
                     // Filtrar agendamentos que devem ser renderizados nesta célula
-                    // Renderizar agendamentos que começam nesta célula OU que atravessam esta célula
+                    // IMPORTANTE: Renderizar apenas agendamentos que COMEÇAM nesta célula
+                    // Agendamentos que atravessam múltiplas células serão renderizados apenas na primeira,
+                    // mas com altura suficiente para atravessar visualmente as células seguintes
                     const appointmentsToRender = allDayAppointments.filter((appointment) => {
                       if (!appointment) return false;
                       const aptStart = new Date(appointment.date);
@@ -350,7 +352,16 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                       // Verificar se o agendamento se sobrepõe com este slot
                       const overlaps = aptStart < slotEnd && slotStart < aptEnd;
                       
-                      return overlaps;
+                      if (!overlaps) return false;
+                      
+                      // Renderizar apenas se o agendamento COMEÇA nesta célula
+                      // Isso evita renderizar o mesmo agendamento múltiplas vezes
+                      const aptStartTime = aptStart.getTime();
+                      const slotStartTime = slotStart.getTime();
+                      const slotEndTime = slotEnd.getTime();
+                      
+                      // Renderizar se começa dentro desta célula (não antes)
+                      return aptStartTime >= slotStartTime && aptStartTime < slotEndTime;
                     });
                     
                     return (
@@ -407,36 +418,22 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                           let topOffset = 0;
                           let height = totalHeight;
                           
-                          // Verificar se o agendamento começa antes desta célula
-                          if (aptStartTime < slotStartTime) {
-                            // Agendamento atravessa esta célula (começou em célula anterior)
-                            // Começar do topo desta célula
-                            topOffset = 0;
-                            
-                            // Calcular altura até o fim desta célula ou até o fim do agendamento (o que for menor)
-                            if (aptEndTime <= slotEndTime) {
-                              // Agendamento termina dentro desta célula
-                              const minutesFromSlotStart = (aptEndTime - slotStartTime) / (60 * 1000);
-                              height = (minutesFromSlotStart / 60) * hourCellHeight;
-                            } else {
-                              // Agendamento atravessa múltiplas células a partir desta
-                              // Altura completa desta célula
-                              height = hourCellHeight;
-                            }
-                          } else {
-                            // Agendamento começa dentro desta célula
-                            topOffset = calculateAppointmentTopOffset(aptStart, hourCellHeight);
-                            
-                            if (aptEndTime <= slotEndTime) {
-                              // Agendamento termina dentro deste slot
-                              // Usar altura proporcional calculada
-                              height = totalHeight;
+                          // Agendamento sempre começa dentro desta célula (devido ao filtro acima)
+                          topOffset = calculateAppointmentTopOffset(aptStart, hourCellHeight);
+                          
+                          // Calcular altura total que o agendamento precisa ocupar
+                          // Se atravessa múltiplas células, calcular altura total incluindo todas
+                          if (aptEndTime <= slotEndTime) {
+                            // Agendamento termina dentro desta célula
+                            height = totalHeight;
                           } else {
                             // Agendamento atravessa múltiplas células
-                            // Calcular altura até o fim do slot atual apenas
-                            // Não incluir células seguintes aqui - elas serão renderizadas separadamente
-                            height = hourCellHeight - topOffset;
-                          }
+                            // Calcular altura total desde o início até o fim do agendamento
+                            // Isso fará o agendamento atravessar visualmente as células seguintes
+                            const heightUntilSlotEnd = hourCellHeight - topOffset;
+                            const minutesAfterSlotEnd = (aptEndTime - slotEndTime) / (60 * 1000);
+                            const additionalHeight = (minutesAfterSlotEnd / 60) * hourCellHeight;
+                            height = heightUntilSlotEnd + additionalHeight;
                           }
                           
                           // Não limitar altura - permitir que atravesse múltiplas células
