@@ -125,12 +125,12 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
   } = useQuery({
     queryKey: ['appointments', user?.id, courtId ?? 'all'],
     staleTime: 0, // Sempre considerar dados como stale para forçar refetch quando necessário
-    gcTime: 1000 * 60 * 5, // 5 minutos de cache (aumentado)
+    gcTime: 0, // Não manter cache quando queryKey muda (força novo fetch)
     refetchOnMount: 'always', // Sempre refazer query quando o componente montar
     refetchOnWindowFocus: false, // Não refazer quando a janela ganhar foco
     enabled: !!user?.id, // Só executar se houver usuário
     queryFn: async (): Promise<AppointmentWithModality[]> => {
-      console.log('🔄 useAppointments - Executando queryFn com courtId:', courtId);
+      console.log('🔄 useAppointments - Executando queryFn com courtId:', courtId, 'queryKey:', ['appointments', user?.id, courtId ?? 'all']);
       if (!user?.id) {
         throw new Error('Usuário não autenticado');
       }
