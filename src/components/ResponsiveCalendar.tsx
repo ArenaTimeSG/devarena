@@ -367,8 +367,8 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                         onClick={(e) => {
                           // Verificar se o clique foi em uma área vazia (não em um agendamento)
                           const target = e.target as HTMLElement;
-                          // Se o clique foi diretamente no td ou em um elemento sem pointer-events, processar
-                          if (target === e.currentTarget || target.closest('.appointment-block') === null) {
+                          // Se o clique foi diretamente no td ou não foi em um appointment-block, processar
+                          if (target === e.currentTarget || !target.closest('.appointment-block')) {
                             onCellClick(day, timeSlot);
                           }
                         }}
@@ -431,11 +431,12 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                               // Agendamento termina dentro deste slot
                               // Usar altura proporcional calculada
                               height = totalHeight;
-                            } else {
-                              // Agendamento atravessa múltiplas células
-                              // Calcular altura até o fim do slot atual apenas
-                              height = hourCellHeight - topOffset;
-                            }
+                          } else {
+                            // Agendamento atravessa múltiplas células
+                            // Calcular altura até o fim do slot atual apenas
+                            // Não incluir células seguintes aqui - elas serão renderizadas separadamente
+                            height = hourCellHeight - topOffset;
+                          }
                           }
                           
                           // Não limitar altura - permitir que atravesse múltiplas células
@@ -447,7 +448,7 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                           
                           return (
                             <motion.div
-                              key={`${appointment.id}-${timeSlot}`}
+                              key={`${appointment.id}-${timeSlot}-${day.toISOString()}`}
                               className="appointment-block absolute rounded-md shadow-sm border border-blue-200/50 overflow-hidden z-20"
                               style={{
                                 top: `${topOffset}px`,
@@ -456,6 +457,7 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                                 height: `${Math.max(18, height)}px`,
                                 minHeight: '18px',
                                 pointerEvents: 'auto', // Permitir cliques no agendamento
+                                zIndex: 20, // Garantir que está acima do fundo mas permite cliques em áreas vazias
                               }}
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -475,9 +477,101 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                           );
                         })}
                         
+                        {/* Áreas clicáveis vazias - dividir célula em zonas clicáveis para permitir cliques em áreas não ocupadas */}
+                        {appointmentsToRender.length > 0 && (() => {
+                          const hourCellHeight = 64; // Altura da célula de 1 hora
+                          // Criar zonas clicáveis para áreas vazias da célula
+                          const zones: Array<{ top: number; height: number }> = [];
+                          let currentTop = 0;
+                          
+                          // Ordenar agendamentos por horário de início
+                          const sortedAppointments = [...appointmentsToRender].sort((a, b) => {
+                            if (!a || !b) return 0;
+                            return new Date(a.date).getTime() - new Date(b.date).getTime();
+                          });
+                          
+                          sortedAppointments.forEach((appointment) => {
+                            if (!appointment) return;
+                            const aptStart = new Date(appointment.date);
+                            const aptEnd = appointment.end_time ? new Date(appointment.end_time) : new Date(aptStart.getTime() + 60 * 60 * 1000);
+                            const aptStartTime = aptStart.getTime();
+                            const aptEndTime = aptEnd.getTime();
+                            const slotStartTime = slotStart.getTime();
+                            const slotEndTime = slotEnd.getTime();
+                            
+                            let appointmentTop = 0;
+                            let appointmentHeight = hourCellHeight;
+                            
+                            if (aptStartTime < slotStartTime) {
+                              appointmentTop = 0;
+                              if (aptEndTime <= slotEndTime) {
+                                const minutesFromSlotStart = (aptEndTime - slotStartTime) / (60 * 1000);
+                                appointmentHeight = (minutesFromSlotStart / 60) * hourCellHeight;
+                              } else {
+                                appointmentHeight = hourCellHeight;
+                              }
+                            } else {
+                              appointmentTop = calculateAppointmentTopOffset(aptStart, hourCellHeight);
+                              if (aptEndTime <= slotEndTime) {
+                                appointmentHeight = calculateAppointmentHeight(aptStart, aptEnd, hourCellHeight);
+                              } else {
+                                appointmentHeight = hourCellHeight - appointmentTop;
+                              }
+                            }
+                            
+                            // Se há espaço antes do agendamento, criar zona clicável
+                            if (appointmentTop > currentTop) {
+                              zones.push({
+                                top: currentTop,
+                                height: appointmentTop - currentTop
+                              });
+                            }
+                            
+                            // Atualizar currentTop para depois do agendamento
+                            currentTop = Math.max(currentTop, appointmentTop + appointmentHeight);
+                          });
+                          
+                          // Se há espaço depois do último agendamento, criar zona clicável
+                          if (currentTop < hourCellHeight) {
+                            zones.push({
+                              top: currentTop,
+                              height: hourCellHeight - currentTop
+                            });
+                          }
+                          
+                          return zones.map((zone, idx) => (
+                            zone.height > 5 && ( // Só criar zona se tiver pelo menos 5px de altura
+                              <div
+                                key={`empty-zone-${idx}`}
+                                className="absolute left-0 right-0 cursor-pointer z-10 hover:bg-blue-50/30 transition-colors"
+                                style={{
+                                  top: `${zone.top}px`,
+                                  height: `${zone.height}px`,
+                                  pointerEvents: 'auto',
+                                }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  // Calcular o horário aproximado baseado na posição do clique dentro da zona
+                                  const rect = e.currentTarget.getBoundingClientRect();
+                                  const clickY = e.clientY - rect.top;
+                                  const minutesFromZoneTop = (clickY / zone.height) * (zone.height / hourCellHeight * 60);
+                                  const slotHour = parseInt(timeSlot.split(':')[0]);
+                                  const slotMinute = parseInt(timeSlot.split(':')[1]) || 0;
+                                  const totalMinutesFromSlotStart = (zone.top / hourCellHeight * 60) + minutesFromZoneTop;
+                                  const clickMinute = Math.floor(totalMinutesFromSlotStart);
+                                  const clickHour = slotHour + Math.floor(clickMinute / 60);
+                                  const clickMinuteFinal = clickMinute % 60;
+                                  const clickTime = `${String(clickHour).padStart(2, '0')}:${String(clickMinuteFinal).padStart(2, '0')}`;
+                                  onCellClick(day, clickTime);
+                                }}
+                              />
+                            )
+                          ));
+                        })()}
+                        
                         {/* Mostrar bloqueio se não houver agendamentos */}
                         {appointmentsToRender.length === 0 && isBlocked && (
-                          <div className="w-full h-full flex items-center justify-center">
+                          <div className="w-full h-full flex items-center justify-center pointer-events-none">
                             <div className="text-slate-400 text-xs">
                               {getBlockadeReason ? getBlockadeReason(day, timeSlot) || 'Bloqueado' : 'Bloqueado'}
                             </div>
