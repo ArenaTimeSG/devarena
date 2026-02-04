@@ -153,6 +153,10 @@ const AppointmentDetailsModal = ({
     }
 
     // Obter template salvo ou usar padrão
+    console.log('📱 buildWhatsAppLink - settings:', settings);
+    console.log('📱 buildWhatsAppLink - whatsapp_templates:', settings?.whatsapp_templates);
+    console.log('📱 buildWhatsAppLink - appointment_reminder:', settings?.whatsapp_templates?.appointment_reminder);
+    
     const template = settings?.whatsapp_templates?.appointment_reminder || `Olá, {nome}!
 
 Lembrete do seu agendamento:
@@ -166,6 +170,8 @@ Por favor, confirme sua presença respondendo:
 [2] Não poderei comparecer
 
 Agradecemos a confirmação!`;
+    
+    console.log('📱 buildWhatsAppLink - template final:', template);
 
     // Preparar variáveis para substituição
     const nome = appointment?.client?.name || 'Cliente';

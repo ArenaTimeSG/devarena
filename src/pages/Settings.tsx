@@ -32,7 +32,7 @@ const Settings = () => {
   const { profile } = useUserProfile();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { settings, isLoading: settingsLoading, error, updateSettings } = useSettings();
+  const { settings, isLoading: settingsLoading, error, updateSettings, refetch: refetchSettings } = useSettings();
   
   // Hook para agendamentos de clientes
   const { agendamentos, isLoading: bookingsLoading, confirmBooking, cancelBooking, markCompleted } = useClientBookings(user?.id);
@@ -260,14 +260,18 @@ Por favor, confirme sua presença respondendo:
 Agradecemos a confirmação!`
       };
 
+      console.log('🔍 Settings - Carregando templates:', settings.whatsapp_templates);
       if (settings.whatsapp_templates) {
-        setWhatsappTemplates({
+        const loadedTemplates = {
           appointment_reminder: settings.whatsapp_templates.appointment_reminder || defaultTemplates.appointment_reminder,
           monthly_agenda: settings.whatsapp_templates.monthly_agenda || defaultTemplates.monthly_agenda
-        });
+        };
+        console.log('🔍 Settings - Templates carregados:', loadedTemplates);
+        setWhatsappTemplates(loadedTemplates);
         setHasTemplateChanges(false);
       } else {
         // Se não existir templates salvos, usar os padrões
+        console.log('🔍 Settings - Usando templates padrão');
         setWhatsappTemplates(defaultTemplates);
         setHasTemplateChanges(false);
       }
@@ -386,7 +390,10 @@ Agradecemos a confirmação!`
   // Função para salvar templates de WhatsApp
   const handleSaveTemplates = async () => {
     try {
+      console.log('💾 Salvando templates:', whatsappTemplates);
       await updateSettings({ whatsapp_templates: whatsappTemplates });
+      // Invalidar cache e refetch para garantir que os dados estão atualizados
+      await refetchSettings();
       setHasTemplateChanges(false);
       toast({
         title: 'Templates salvos!',

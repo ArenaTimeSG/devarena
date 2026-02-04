@@ -93,7 +93,8 @@ export const useSettings = () => {
               personal_data: defaultSettings.personal_data as any,
               online_enabled: defaultSettings.online_enabled,
               online_booking: defaultSettings.online_booking as any,
-              payment_policy: defaultSettings.payment_policy
+              payment_policy: defaultSettings.payment_policy,
+              whatsapp_templates: defaultSettings.whatsapp_templates as any
             })
             .select()
             .single();
@@ -109,6 +110,8 @@ export const useSettings = () => {
         throw error;
       }
 
+      console.log('📥 useSettings - Dados retornados do banco:', data);
+      console.log('📥 useSettings - whatsapp_templates:', data?.whatsapp_templates);
       return data as unknown as Settings;
     },
     enabled: !!userId,
@@ -160,8 +163,12 @@ export const useSettings = () => {
       return data as unknown as Settings;
     },
     onSuccess: (data) => {
+      console.log('✅ useSettings - Dados salvos retornados:', data);
+      console.log('✅ useSettings - whatsapp_templates salvo:', data?.whatsapp_templates);
       // Atualizar o cache
       queryClient.setQueryData(['settings', user?.id], data);
+      // Invalidar queries relacionadas para forçar atualização
+      queryClient.invalidateQueries({ queryKey: ['settings', user?.id] });
       
       toast({
         title: 'Configurações salvas!',
