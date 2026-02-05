@@ -66,7 +66,7 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
-  const { courtId } = options || {};
+  const { courtId, forceRefresh } = options || {};
 
   // Função otimizada para buscar dados relacionados
   const fetchRelatedData = useCallback(async (appointments: any[]) => {
