@@ -82,7 +82,7 @@ export function CourtSelector({ className, showLabel = true }: CourtSelectorProp
           Quadra
         </label>
       )}
-      <div className="flex gap-2">
+      <div className="flex gap-2 items-center">
         <Select 
           value={tempSelectedId} 
           onValueChange={setTempSelectedId}
@@ -105,17 +105,16 @@ export function CourtSelector({ className, showLabel = true }: CourtSelectorProp
             ))}
           </SelectContent>
         </Select>
-        {hasChanges && (
-          <Button 
-            onClick={handleApply}
-            size="default"
-            className="shrink-0"
-            title="Aplicar seleção"
-          >
-            <Check className="h-4 w-4" />
-            Aplicar
-          </Button>
-        )}
+        <Button 
+          onClick={handleApply}
+          size="default"
+          className="shrink-0"
+          disabled={!hasChanges}
+          title={hasChanges ? "Aplicar seleção" : "Nenhuma mudança"}
+        >
+          <Check className="h-4 w-4" />
+          <span className="hidden sm:inline">Aplicar</span>
+        </Button>
       </div>
       {selectedCourt && !hasChanges && (
         <p className="text-xs text-muted-foreground mt-1">
