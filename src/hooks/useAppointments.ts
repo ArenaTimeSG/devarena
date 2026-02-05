@@ -128,7 +128,7 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
     gcTime: 0, // Não manter cache quando queryKey muda (força novo fetch)
     refetchOnMount: 'always', // Sempre refazer query quando o componente montar
     refetchOnWindowFocus: false, // Não refazer quando a janela ganhar foco
-    enabled: !!user?.id && (courtId !== undefined), // Só executar se houver usuário e courtId definido
+    enabled: !!user?.id, // Só executar se houver usuário
     queryFn: async (): Promise<AppointmentWithModality[]> => {
       console.log('🔄 useAppointments - Executando queryFn com courtId:', courtId, 'queryKey:', ['appointments', user?.id, courtId ?? 'all']);
       if (!user?.id) {
