@@ -114,6 +114,61 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
   // Garantir que o queryKey sempre tenha um valor consistente
   const queryKeyCourtId = courtId ?? 'all';
   
+  // Escutar evento de mudança de quadra para forçar refetch
+  useEffect(() => {
+    const handleCourtChange = async (event: CustomEvent) => {
+      const { courtId: newCourtId } = event.detail;
+      console.log('🔄 useAppointments - Evento courtChanged recebido, courtId:', newCourtId);
+      
+      // Remover TODAS as queries de appointments
+      queryClient.removeQueries({ 
+        queryKey: ['appointments'],
+        exact: false 
+      });
+      
+      // Invalidar queries
+      queryClient.invalidateQueries({ 
+        queryKey: ['appointments'],
+        exact: false 
+      });
+      
+      // Aguardar um pouco e então refetch
+      setTimeout(() => {
+        queryClient.refetchQueries({ 
+          queryKey: ['appointments', user?.id, newCourtId ?? 'all'],
+          exact: true 
+        });
+      }, 50);
+    };
+
+    window.addEventListener('courtChanged', handleCourtChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('courtChanged', handleCourtChange as EventListener);
+    };
+  }, [user?.id, queryClient]);
+  
+  // Forçar refetch quando courtId mudar na query key
+  useEffect(() => {
+    if (!user?.id) return;
+    
+    console.log('🔄 useAppointments - courtId mudou para:', courtId, 'queryKeyCourtId:', queryKeyCourtId);
+    
+    // Remover queries antigas
+    queryClient.removeQueries({ 
+      queryKey: ['appointments', user?.id],
+      exact: false 
+    });
+    
+    // Refetch com a nova query key
+    setTimeout(() => {
+      queryClient.refetchQueries({ 
+        queryKey: ['appointments', user?.id, queryKeyCourtId],
+        exact: true 
+      });
+    }, 100);
+  }, [courtId, queryKeyCourtId, user?.id, queryClient]);
+  
   // Query otimizada para buscar agendamentos
   const {
     data: appointments = [],

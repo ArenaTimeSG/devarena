@@ -1,7 +1,6 @@
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useCourts } from '@/hooks/useCourts';
 import { useSelectedCourt } from '@/hooks/useSelectedCourt';
-import { useQueryClient } from '@tanstack/react-query';
 import {
   Select,
   SelectContent,
@@ -19,31 +18,30 @@ type CourtSelectorProps = {
 export function CourtSelector({ className, showLabel = true }: CourtSelectorProps) {
   const { courts, isLoading } = useCourts();
   const { selectedCourtId, selectedCourt, setSelectedCourtId } = useSelectedCourt();
-  const queryClient = useQueryClient();
+  const [localCourtId, setLocalCourtId] = useState<string>(selectedCourtId || '');
 
-  const handleCourtChange = (value: string) => {
+  // Sincronizar com o estado global
+  useEffect(() => {
+    setLocalCourtId(selectedCourtId || '');
+  }, [selectedCourtId]);
+
+  const handleChange = async (value: string) => {
     const newCourtId = value || null;
     
     if (newCourtId === selectedCourtId) {
-      return; // Já está selecionado
+      return;
     }
 
-    console.log('🔄 CourtSelector - Mudando quadra de', selectedCourtId, 'para', newCourtId);
+    console.log('🔄 CourtSelector - Mudando de', selectedCourtId, 'para', newCourtId);
     
-    // Atualizar a quadra selecionada
+    // Atualizar estado local imediatamente para feedback visual
+    setLocalCourtId(value);
+    
+    // Atualizar estado global
     setSelectedCourtId(newCourtId);
-
-    // Remover TODAS as queries de appointments do cache
-    queryClient.removeQueries({ 
-      queryKey: ['appointments'],
-      exact: false 
-    });
-
-    // Invalidar e refetch imediatamente
-    queryClient.invalidateQueries({ 
-      queryKey: ['appointments'],
-      exact: false 
-    });
+    
+    // Disparar evento customizado para forçar atualização
+    window.dispatchEvent(new CustomEvent('courtChanged', { detail: { courtId: newCourtId } }));
   };
 
   if (isLoading) {
@@ -68,8 +66,8 @@ export function CourtSelector({ className, showLabel = true }: CourtSelectorProp
         </label>
       )}
       <Select 
-        value={selectedCourtId || ''} 
-        onValueChange={handleCourtChange}
+        value={localCourtId} 
+        onValueChange={handleChange}
       >
         <SelectTrigger className="w-full">
           <SelectValue placeholder="Selecione uma quadra" />

@@ -12,19 +12,16 @@ export const useSelectedCourt = () => {
   const [selectedCourtId, setSelectedCourtId] = useState<string | null>(null);
   const initializedRef = useRef(false);
 
-  // Carregar quadra selecionada do localStorage ao montar (apenas uma vez)
+  // Carregar quadra selecionada do localStorage ao montar
   useEffect(() => {
-    // Só executar no cliente
     if (typeof window === 'undefined' || !user?.id) {
       initializedRef.current = false;
       setSelectedCourtId(null);
       return;
     }
     
-    // Aguardar o carregamento das quadras antes de inicializar
     if (courtsLoading) return;
     
-    // Se já inicializou, não resetar
     if (initializedRef.current) return;
 
     const storageKey = `selectedCourt_${user.id}`;
@@ -37,7 +34,6 @@ export const useSelectedCourt = () => {
     }
 
     if (savedCourtId && courts.length > 0) {
-      // Verificar se a quadra ainda existe e está ativa
       const courtExists = courts.some((c) => c.id === savedCourtId && c.is_active);
       if (courtExists) {
         setSelectedCourtId(savedCourtId);
@@ -46,8 +42,7 @@ export const useSelectedCourt = () => {
       }
     }
 
-    // Se não há quadra selecionada ou a quadra não existe mais,
-    // usar a primeira quadra disponível ou criar Quadra 1 padrão
+    // Selecionar primeira quadra ativa
     if (courts.length > 0) {
       const firstActiveCourt = courts.find((c) => c.is_active);
       if (firstActiveCourt) {
@@ -59,7 +54,6 @@ export const useSelectedCourt = () => {
         }
         initializedRef.current = true;
       } else if (getOrCreateDefaultCourt) {
-        // Se não há quadras ativas, tentar criar Quadra 1 padrão
         getOrCreateDefaultCourt().then((defaultCourt) => {
           if (defaultCourt) {
             setSelectedCourtId(defaultCourt.id);
@@ -75,7 +69,6 @@ export const useSelectedCourt = () => {
         });
       }
     } else if (getOrCreateDefaultCourt) {
-      // Se não há quadras, criar Quadra 1 padrão
       getOrCreateDefaultCourt().then((defaultCourt) => {
         if (defaultCourt) {
           setSelectedCourtId(defaultCourt.id);
