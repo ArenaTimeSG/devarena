@@ -124,13 +124,14 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
   } = useQuery({
     queryKey: ['appointments', user?.id, queryKeyCourtId, forceRefresh ?? 0],
     staleTime: 0, // Sempre considerar dados como stale para garantir atualização imediata quando a quadra mudar
-    gcTime: 1000 * 60 * 5, // 5 minutos de cache
+    gcTime: 0, // Não manter cache - sempre buscar dados frescos quando a query key mudar
     refetchOnMount: 'always', // Sempre refazer quando montar
     refetchOnWindowFocus: false,
     enabled: !!user?.id, // Só executar se houver usuário
     refetchOnReconnect: false,
     queryFn: async (): Promise<AppointmentWithModality[]> => {
-      console.log('🔄 useAppointments - Executando queryFn com courtId:', courtId, 'queryKey:', ['appointments', user?.id, queryKeyCourtId]);
+      console.log('🔄 useAppointments - Executando queryFn com courtId:', courtId, 'queryKeyCourtId:', queryKeyCourtId, 'forceRefresh:', forceRefresh);
+      console.log('🔄 useAppointments - QueryKey completa:', ['appointments', user?.id, queryKeyCourtId, forceRefresh ?? 0]);
       if (!user?.id) {
         throw new Error('Usuário não autenticado');
       }

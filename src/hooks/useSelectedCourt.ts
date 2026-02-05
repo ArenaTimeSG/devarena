@@ -151,22 +151,42 @@ export const useSelectedCourt = () => {
         }
       }
       
-      // Invalidar queries de agendamentos para forçar recarregamento imediato
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      // Remover TODAS as queries de appointments do cache para forçar recarregamento completo
+      queryClient.removeQueries({ 
+        queryKey: ['appointments'],
+        exact: false 
+      });
+      
+      // Invalidar também para garantir que componentes sejam notificados
+      queryClient.invalidateQueries({ 
+        queryKey: ['appointments'],
+        exact: false 
+      });
       
       return courtId;
     });
   }, [selectedCourtId, user?.id, queryClient]);
 
-  // Invalidar queries quando a quadra selecionada mudar
+  // Invalidar queries quando a quadra selecionada mudar (backup caso handleSetSelectedCourt não seja chamado)
   useEffect(() => {
     // Só invalidar se a quadra realmente mudou (não na primeira renderização)
     if (previousCourtIdRef.current !== null && previousCourtIdRef.current !== selectedCourtId) {
-      console.log('🔄 Quadra selecionada mudou, invalidando queries...', {
+      console.log('🔄 useSelectedCourt - Quadra selecionada mudou via useEffect, invalidando queries...', {
         anterior: previousCourtIdRef.current,
         nova: selectedCourtId
       });
-      queryClient.invalidateQueries({ queryKey: ['appointments'] });
+      
+      // Remover TODAS as queries de appointments do cache
+      queryClient.removeQueries({ 
+        queryKey: ['appointments'],
+        exact: false 
+      });
+      
+      // Invalidar também para garantir que componentes sejam notificados
+      queryClient.invalidateQueries({ 
+        queryKey: ['appointments'],
+        exact: false 
+      });
     }
     previousCourtIdRef.current = selectedCourtId;
   }, [selectedCourtId, queryClient]);

@@ -81,20 +81,26 @@ const Dashboard = () => {
     
     console.log('🔄 Dashboard - Quadra selecionada mudou para:', selectedCourtId);
     
-    // Incrementar forceRefresh para forçar nova query
+    // Incrementar forceRefresh para forçar nova query (isso muda a queryKey)
     setForceRefresh(prev => prev + 1);
     
-    // Remover TODAS as queries de appointments
+    // Remover TODAS as queries de appointments do cache
     queryClient.removeQueries({ 
       queryKey: ['appointments'],
       exact: false 
     });
     
-    // Refetch imediatamente após um pequeno delay
+    // Invalidar queries para garantir que componentes sejam notificados
+    queryClient.invalidateQueries({ 
+      queryKey: ['appointments'],
+      exact: false 
+    });
+    
+    // Refetch imediatamente após um pequeno delay para garantir que a nova query seja executada
     const timeoutId = setTimeout(() => {
-      console.log('🔄 Dashboard - Forçando refetch após mudança de quadra');
+      console.log('🔄 Dashboard - Forçando refetch após mudança de quadra para courtId:', selectedCourtId);
       refetch();
-    }, 100);
+    }, 50);
     
     return () => clearTimeout(timeoutId);
   }, [selectedCourtId, user?.id, queryClient, refetch]);
