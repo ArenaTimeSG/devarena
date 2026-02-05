@@ -79,8 +79,8 @@ const Dashboard = () => {
   
   // Forçar atualização quando selectedCourtId mudar
   useEffect(() => {
-    if (user?.id) {
-      const courtIdForQuery = selectedCourtId ?? 'all';
+    if (user?.id && selectedCourtId !== null && selectedCourtId !== undefined) {
+      const courtIdForQuery = selectedCourtId;
       console.log('🔄 Dashboard - selectedCourtId mudou para:', selectedCourtId, 'queryKey será:', ['appointments', user.id, courtIdForQuery]);
       
       // Remover TODAS as queries de appointments para forçar novo fetch
@@ -96,10 +96,12 @@ const Dashboard = () => {
       });
       
       // Aguardar um pouco para garantir que o React Query processou a mudança do queryKey
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         console.log('🔄 Dashboard - Executando refetch após mudança de quadra');
         refetch();
-      }, 50);
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [selectedCourtId, user?.id, queryClient, refetch]);
   
@@ -1109,6 +1111,7 @@ const Dashboard = () => {
            ) : (
               viewMode === 'weekly' ? (
                 <ResponsiveCalendar
+                  key={`calendar-${selectedCourtId || 'all'}-${currentWeek.getTime()}`} // Forçar re-render quando quadra ou semana mudar
                   currentWeek={currentWeek}
                   setCurrentWeek={setCurrentWeek}
                   appointments={getAppointmentsForCurrentWeek()}
