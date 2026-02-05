@@ -67,22 +67,17 @@ const Dashboard = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { selectedCourtId } = useSelectedCourt();
-  const [forceRefresh, setForceRefresh] = useState(0);
   
-  // Passar courtId diretamente - React Query vai detectar mudança no queryKey
+  // Passar courtId diretamente - React Query vai detectar mudança no queryKey automaticamente
   const { appointments, getFinancialSummary, isLoading: appointmentsLoading, refetch } = useAppointments({ 
-    courtId: selectedCourtId || undefined,
-    forceRefresh // Usar forceRefresh para forçar nova query
+    courtId: selectedCourtId || undefined
   });
   
-  // Forçar atualização quando selectedCourtId mudar - SOLUÇÃO SIMPLES E DIRETA
+  // Forçar atualização quando selectedCourtId mudar
   useEffect(() => {
-    if (!user?.id) return;
+    if (!user?.id || selectedCourtId === undefined) return;
     
     console.log('🔄 Dashboard - Quadra selecionada mudou para:', selectedCourtId);
-    
-    // Incrementar forceRefresh para forçar nova query (isso muda a queryKey)
-    setForceRefresh(prev => prev + 1);
     
     // Remover TODAS as queries de appointments do cache
     queryClient.removeQueries({ 
@@ -90,25 +85,9 @@ const Dashboard = () => {
       exact: false 
     });
     
-    // Invalidar queries para garantir que componentes sejam notificados
-    queryClient.invalidateQueries({ 
-      queryKey: ['appointments'],
-      exact: false 
-    });
-    
-    // Refetch imediatamente após um pequeno delay para garantir que a nova query seja executada
-    const timeoutId = setTimeout(() => {
-      console.log('🔄 Dashboard - Forçando refetch após mudança de quadra para courtId:', selectedCourtId);
-      refetch();
-    }, 50);
-    
-    return () => clearTimeout(timeoutId);
+    // Refetch imediatamente
+    refetch();
   }, [selectedCourtId, user?.id, queryClient, refetch]);
-  
-  // Log quando appointments mudar
-  useEffect(() => {
-    console.log('🔄 Dashboard - appointments atualizado:', appointments.length, 'para courtId:', selectedCourtId);
-  }, [appointments, selectedCourtId]);
   
   const navigate = useNavigate();
   const [currentWeek, setCurrentWeek] = useState(new Date());
@@ -1111,7 +1090,7 @@ const Dashboard = () => {
            ) : (
               viewMode === 'weekly' ? (
                 <ResponsiveCalendar
-                  key={`calendar-${selectedCourtId || 'all'}-${currentWeek.getTime()}`} // Forçar re-render quando quadra ou semana mudar
+                  key={`calendar-${selectedCourtId || 'all'}-${currentWeek.getTime()}-${appointments.length}`} // Forçar re-render quando quadra, semana ou appointments mudarem
                   currentWeek={currentWeek}
                   setCurrentWeek={setCurrentWeek}
                   appointments={getAppointmentsForCurrentWeek()}

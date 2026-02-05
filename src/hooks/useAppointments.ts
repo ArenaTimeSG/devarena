@@ -58,7 +58,6 @@ const modalitiesCache = new Map<string, Map<string, any>>();
 
 export interface UseAppointmentsOptions {
   courtId?: string | null; // Se fornecido, filtra por quadra específica
-  forceRefresh?: number; // Número que muda para forçar nova query
 }
 
 export const useAppointments = (options?: UseAppointmentsOptions) => {
@@ -66,7 +65,7 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
-  const { courtId, forceRefresh } = options || {};
+  const { courtId } = options || {};
 
   // Função otimizada para buscar dados relacionados
   const fetchRelatedData = useCallback(async (appointments: any[]) => {
@@ -122,7 +121,7 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
     error: queryError,
     refetch,
   } = useQuery({
-    queryKey: ['appointments', user?.id, queryKeyCourtId, forceRefresh ?? 0],
+    queryKey: ['appointments', user?.id, queryKeyCourtId],
     staleTime: 0, // Sempre considerar dados como stale para garantir atualização imediata quando a quadra mudar
     gcTime: 0, // Não manter cache - sempre buscar dados frescos quando a query key mudar
     refetchOnMount: 'always', // Sempre refazer quando montar
@@ -130,8 +129,8 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
     enabled: !!user?.id, // Só executar se houver usuário
     refetchOnReconnect: false,
     queryFn: async (): Promise<AppointmentWithModality[]> => {
-      console.log('🔄 useAppointments - Executando queryFn com courtId:', courtId, 'queryKeyCourtId:', queryKeyCourtId, 'forceRefresh:', forceRefresh);
-      console.log('🔄 useAppointments - QueryKey completa:', ['appointments', user?.id, queryKeyCourtId, forceRefresh ?? 0]);
+      console.log('🔄 useAppointments - Executando queryFn com courtId:', courtId, 'queryKeyCourtId:', queryKeyCourtId);
+      console.log('🔄 useAppointments - QueryKey completa:', ['appointments', user?.id, queryKeyCourtId]);
       if (!user?.id) {
         throw new Error('Usuário não autenticado');
       }
