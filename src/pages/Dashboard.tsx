@@ -74,68 +74,15 @@ const Dashboard = () => {
     courtId: selectedCourtId || undefined
   });
   
-  // Escutar evento customizado de mudança de quadra
-  useEffect(() => {
-    if (!user?.id) return;
-    
-    const handleCourtChange = async (event: CustomEvent) => {
-      const { courtId: newCourtId } = event.detail;
-      const newQueryKeyCourtId = newCourtId ?? 'all';
-      
-      console.log('🔄 Dashboard - Evento courtChanged recebido, newCourtId:', newCourtId);
-      
-      // Remover TODAS as queries de appointments do cache completamente
-      queryClient.removeQueries({ 
-        queryKey: ['appointments'],
-        exact: false 
-      });
-      
-      // Forçar atualização do componente
-      setRefreshKey(prev => prev + 1);
-      
-      // Aguardar um pouco para garantir que o cache foi limpo e então refetch com a nova query key
-      setTimeout(async () => {
-        console.log('🔄 Dashboard - Forçando refetch após evento com queryKey:', ['appointments', user.id, newQueryKeyCourtId]);
-        await queryClient.refetchQueries({ 
-          queryKey: ['appointments', user.id, newQueryKeyCourtId],
-          exact: true 
-        });
-      }, 100);
-    };
-
-    window.addEventListener('courtChanged', handleCourtChange as EventListener);
-    
-    return () => {
-      window.removeEventListener('courtChanged', handleCourtChange as EventListener);
-    };
-  }, [user?.id, queryClient]);
-  
-  // Forçar atualização quando selectedCourtId mudar
+  // Forçar atualização do componente quando selectedCourtId mudar
   useEffect(() => {
     if (!user?.id || selectedCourtId === undefined) return;
     
-    const queryKeyCourtId = selectedCourtId ?? 'all';
+    console.log('🔄 Dashboard - Quadra selecionada mudou para:', selectedCourtId);
     
-    console.log('🔄 Dashboard - Quadra selecionada mudou para:', selectedCourtId, 'queryKeyCourtId:', queryKeyCourtId);
-    
-    // Remover TODAS as queries de appointments do cache completamente
-    queryClient.removeQueries({ 
-      queryKey: ['appointments'],
-      exact: false 
-    });
-    
-    // Forçar atualização do componente
+    // Forçar atualização do componente - React Query vai automaticamente executar a nova query
     setRefreshKey(prev => prev + 1);
-    
-    // Aguardar um pouco e então refetch com a nova query key
-    setTimeout(async () => {
-      console.log('🔄 Dashboard - Forçando refetch com queryKey:', ['appointments', user.id, queryKeyCourtId]);
-      await queryClient.refetchQueries({ 
-        queryKey: ['appointments', user.id, queryKeyCourtId],
-        exact: true 
-      });
-    }, 100);
-  }, [selectedCourtId, user?.id, queryClient]);
+  }, [selectedCourtId, user?.id]);
   
   const navigate = useNavigate();
   const [currentWeek, setCurrentWeek] = useState(new Date());

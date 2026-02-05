@@ -25,7 +25,7 @@ export function CourtSelector({ className, showLabel = true }: CourtSelectorProp
     setLocalCourtId(selectedCourtId || '');
   }, [selectedCourtId]);
 
-  const handleChange = async (value: string) => {
+  const handleChange = (value: string) => {
     const newCourtId = value || null;
     
     if (newCourtId === selectedCourtId) {
@@ -37,11 +37,8 @@ export function CourtSelector({ className, showLabel = true }: CourtSelectorProp
     // Atualizar estado local imediatamente para feedback visual
     setLocalCourtId(value);
     
-    // Atualizar estado global
+    // Atualizar estado global - React Query vai detectar automaticamente a mudança na query key
     setSelectedCourtId(newCourtId);
-    
-    // Disparar evento customizado para forçar atualização
-    window.dispatchEvent(new CustomEvent('courtChanged', { detail: { courtId: newCourtId } }));
   };
 
   if (isLoading) {

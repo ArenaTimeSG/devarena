@@ -114,59 +114,13 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
   // Garantir que o queryKey sempre tenha um valor consistente
   const queryKeyCourtId = courtId ?? 'all';
   
-  // Escutar evento de mudança de quadra e mudanças no courtId para forçar refetch
-  useEffect(() => {
-    if (!user?.id) return;
-    
-    const handleCourtChange = async (event: CustomEvent) => {
-      const { courtId: newCourtId } = event.detail;
-      const newQueryKeyCourtId = newCourtId ?? 'all';
-      
-      console.log('🔄 useAppointments - Evento courtChanged recebido, newCourtId:', newCourtId, 'newQueryKeyCourtId:', newQueryKeyCourtId);
-      
-      // Remover TODAS as queries de appointments do cache completamente
-      queryClient.removeQueries({ 
-        queryKey: ['appointments'],
-        exact: false 
-      });
-      
-      // Aguardar um pouco para garantir que o cache foi limpo
-      setTimeout(() => {
-        // Forçar refetch com a nova query key
-        queryClient.refetchQueries({ 
-          queryKey: ['appointments', user.id, newQueryKeyCourtId],
-          exact: true 
-        });
-      }, 50);
-    };
-
-    window.addEventListener('courtChanged', handleCourtChange as EventListener);
-    
-    return () => {
-      window.removeEventListener('courtChanged', handleCourtChange as EventListener);
-    };
-  }, [user?.id, queryClient]);
-  
-  // Forçar refetch quando courtId mudar - React Query deve detectar automaticamente pela query key
+  // Log quando courtId mudar - React Query vai automaticamente executar a nova query quando a query key mudar
   useEffect(() => {
     if (!user?.id) return;
     
     console.log('🔄 useAppointments - courtId mudou para:', courtId, 'queryKeyCourtId:', queryKeyCourtId);
-    
-    // Remover TODAS as queries de appointments do cache completamente
-    queryClient.removeQueries({ 
-      queryKey: ['appointments'],
-      exact: false 
-    });
-    
-    // Aguardar um pouco e então forçar refetch com a nova query key
-    setTimeout(() => {
-      queryClient.refetchQueries({ 
-        queryKey: ['appointments', user.id, queryKeyCourtId],
-        exact: true 
-      });
-    }, 50);
-  }, [courtId, queryKeyCourtId, user?.id, queryClient]);
+    console.log('🔄 useAppointments - Nova query key será:', ['appointments', user.id, queryKeyCourtId]);
+  }, [courtId, queryKeyCourtId, user?.id]);
   
   // Query otimizada para buscar agendamentos
   const {
@@ -182,6 +136,8 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
     refetchOnWindowFocus: false,
     enabled: !!user?.id, // Só executar se houver usuário
     refetchOnReconnect: false,
+    // Garantir que a query seja executada quando a query key mudar
+    queryKeyHashFn: undefined, // Usar hash padrão do React Query
     queryFn: async ({ queryKey }): Promise<AppointmentWithModality[]> => {
       // Obter courtId atual da query key para evitar problemas de closure
       const currentCourtId = queryKey[2] === 'all' ? null : (queryKey[2] as string | null);
@@ -189,8 +145,10 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
       
       console.log('🔄 useAppointments - Executando queryFn');
       console.log('🔄 useAppointments - QueryKey completa:', queryKey);
+      console.log('🔄 useAppointments - queryKey[2]:', queryKey[2]);
       console.log('🔄 useAppointments - currentCourtId da queryKey:', currentCourtId);
       console.log('🔄 useAppointments - courtId do closure:', courtId);
+      console.log('🔄 useAppointments - queryKeyCourtId:', queryKeyCourtId);
       
       if (!currentUserId) {
         throw new Error('Usuário não autenticado');
