@@ -129,8 +129,9 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
     refetchOnMount: 'always', // Sempre refazer query quando o componente montar
     refetchOnWindowFocus: false, // Não refazer quando a janela ganhar foco
     enabled: !!user?.id, // Só executar se houver usuário
-    // Garantir que sempre refaça quando o queryKey mudar
     refetchOnReconnect: false,
+    // Garantir que sempre execute quando o queryKey mudar
+    notifyOnChangeProps: ['data', 'error', 'isLoading'],
     queryFn: async (): Promise<AppointmentWithModality[]> => {
       console.log('🔄 useAppointments - Executando queryFn com courtId:', courtId, 'queryKey:', ['appointments', user?.id, courtId ?? 'all']);
       if (!user?.id) {

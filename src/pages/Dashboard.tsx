@@ -77,24 +77,29 @@ const Dashboard = () => {
     courtId: selectedCourtId || undefined 
   });
   
-  // Forçar refetch quando selectedCourtId mudar
+  // Forçar atualização quando selectedCourtId mudar
   useEffect(() => {
-    if (user?.id && selectedCourtId !== undefined) {
-      console.log('🔄 Dashboard - selectedCourtId mudou, forçando refetch:', selectedCourtId);
-      // Remover todas as queries antigas de appointments
+    if (user?.id) {
+      const courtIdForQuery = selectedCourtId ?? 'all';
+      console.log('🔄 Dashboard - selectedCourtId mudou para:', selectedCourtId, 'queryKey será:', ['appointments', user.id, courtIdForQuery]);
+      
+      // Remover TODAS as queries de appointments para forçar novo fetch
       queryClient.removeQueries({ 
-        queryKey: ['appointments', user.id],
+        queryKey: ['appointments'],
         exact: false 
       });
-      // Invalidar e forçar refetch
+      
+      // Invalidar todas as queries relacionadas
       queryClient.invalidateQueries({ 
-        queryKey: ['appointments', user.id, selectedCourtId ?? 'all'],
+        queryKey: ['appointments'],
         exact: false 
       });
-      // Aguardar um pouco e então refetch
+      
+      // Aguardar um pouco para garantir que o React Query processou a mudança do queryKey
       setTimeout(() => {
+        console.log('🔄 Dashboard - Executando refetch após mudança de quadra');
         refetch();
-      }, 100);
+      }, 50);
     }
   }, [selectedCourtId, user?.id, queryClient, refetch]);
   
