@@ -67,15 +67,22 @@ const Dashboard = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { selectedCourtId } = useSelectedCourt();
-  
-  // Log quando selectedCourtId mudar
-  useEffect(() => {
-    console.log('🔄 Dashboard - selectedCourtId mudou:', selectedCourtId);
-  }, [selectedCourtId]);
-  
   const { appointments, getFinancialSummary, isLoading: appointmentsLoading, refetch } = useAppointments({ 
     courtId: selectedCourtId 
   });
+  
+  // Forçar refetch quando selectedCourtId mudar
+  useEffect(() => {
+    if (selectedCourtId !== undefined && selectedCourtId !== null) {
+      console.log('🔄 Dashboard - selectedCourtId mudou, forçando refetch:', selectedCourtId);
+      // Invalidar queries e forçar refetch
+      queryClient.invalidateQueries({ 
+        queryKey: ['appointments', user?.id, selectedCourtId],
+        exact: false 
+      });
+      refetch();
+    }
+  }, [selectedCourtId, user?.id, queryClient, refetch]);
   
   // Log quando appointments mudar
   useEffect(() => {
