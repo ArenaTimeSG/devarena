@@ -66,11 +66,31 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const { courtId } = options || {};
+  const prevCourtIdRef = useRef<string | undefined>(courtId);
   
   // Log quando courtId mudar e forçar refetch se necessário
   useEffect(() => {
-    console.log('🔄 useAppointments - courtId mudou:', courtId, 'queryKey será:', ['appointments', user?.id, courtId ?? 'all']);
-  }, [courtId, user?.id]);
+    const prevCourtId = prevCourtIdRef.current;
+    const currentCourtId = courtId;
+    
+    console.log('🔄 useAppointments - courtId mudou:', { 
+      anterior: prevCourtId, 
+      atual: currentCourtId, 
+      queryKey: ['appointments', user?.id, currentCourtId ?? 'all'] 
+    });
+    
+    // Se o courtId realmente mudou, atualizar a ref e forçar refetch
+    if (prevCourtId !== currentCourtId && user?.id) {
+      prevCourtIdRef.current = currentCourtId;
+      console.log('🔄 useAppointments - CourtId mudou de', prevCourtId, 'para', currentCourtId, '- invalidando queries');
+      
+      // Invalidar todas as queries de appointments para forçar novo fetch
+      queryClient.invalidateQueries({ 
+        queryKey: ['appointments'],
+        exact: false 
+      });
+    }
+  }, [courtId, user?.id, queryClient]);
 
   // Função otimizada para buscar dados relacionados
   const fetchRelatedData = useCallback(async (appointments: any[]) => {
