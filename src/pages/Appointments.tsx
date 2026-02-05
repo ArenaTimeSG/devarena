@@ -48,7 +48,7 @@ const Appointments = () => {
   const queryClient = useQueryClient();
   const { courts = [] } = useCourts();
   const { selectedCourtId } = useSelectedCourt();
-  const { appointments, isLoading } = useAppointments({ courtId: selectedCourtId || undefined });
+  const { appointments, isLoading, refetch } = useAppointments({ courtId: selectedCourtId || undefined });
   
   // Log quando appointments mudar
   useEffect(() => {
@@ -74,15 +74,20 @@ const Appointments = () => {
     }
   }, [user, loading, navigate]);
 
-  // O React Query automaticamente fará um novo fetch quando o queryKey mudar (courtId no useAppointments)
-  // Não precisamos invalidar manualmente, o React Query já detecta a mudança no queryKey
+  // Forçar refetch quando selectedCourtId mudar
   useEffect(() => {
     if (user?.id && selectedCourtId !== undefined) {
-      console.log('🔄 Appointments - Quadra selecionada mudou:', selectedCourtId);
+      console.log('🔄 Appointments - Quadra selecionada mudou, forçando refetch:', selectedCourtId);
       // Limpar filteredAppointments imediatamente para mostrar estado de loading
       setFilteredAppointments([]);
+      // Invalidar queries e forçar refetch
+      queryClient.invalidateQueries({ 
+        queryKey: ['appointments', user.id, selectedCourtId],
+        exact: false 
+      });
+      refetch();
     }
-  }, [selectedCourtId, user?.id]);
+  }, [selectedCourtId, user?.id, queryClient, refetch]);
 
   useEffect(() => {
     console.log('🔄 applyFilters - appointments mudou:', appointments.length, 'courtId:', selectedCourtId);
