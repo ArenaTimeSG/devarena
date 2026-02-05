@@ -58,6 +58,7 @@ const modalitiesCache = new Map<string, Map<string, any>>();
 
 export interface UseAppointmentsOptions {
   courtId?: string | null; // Se fornecido, filtra por quadra específica
+  refreshKey?: number; // Chave para forçar refetch quando mudar
 }
 
 export const useAppointments = (options?: UseAppointmentsOptions) => {
@@ -65,7 +66,7 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
-  const { courtId } = options || {};
+  const { courtId, refreshKey } = options || {};
   const prevCourtIdRef = useRef<string | undefined>(courtId);
   
   // Log quando courtId mudar e forçar refetch se necessário
@@ -146,7 +147,7 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
     error: queryError,
     refetch,
   } = useQuery({
-    queryKey: ['appointments', user?.id, queryKeyCourtId],
+    queryKey: ['appointments', user?.id, queryKeyCourtId, refreshKey ?? 0],
     staleTime: 0, // Sempre considerar dados como stale para forçar refetch quando necessário
     gcTime: 0, // Não manter cache quando queryKey muda (força novo fetch)
     refetchOnMount: 'always', // Sempre refazer query quando o componente montar

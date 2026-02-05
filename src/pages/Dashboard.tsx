@@ -68,12 +68,14 @@ const Dashboard = () => {
   const queryClient = useQueryClient();
   const { selectedCourtId } = useSelectedCourt();
   const prevCourtIdRef = useRef<string | null | undefined>(selectedCourtId);
+  const [refreshKey, setRefreshKey] = useState(0);
   
   // Garantir que sempre passamos um valor válido (não undefined)
   const courtIdForQuery = selectedCourtId ?? null;
   
   const { appointments, getFinancialSummary, isLoading: appointmentsLoading, refetch } = useAppointments({ 
-    courtId: courtIdForQuery || undefined 
+    courtId: courtIdForQuery || undefined,
+    refreshKey // Passar refreshKey para forçar nova query
   });
   
   // Forçar atualização quando selectedCourtId mudar
@@ -81,32 +83,34 @@ const Dashboard = () => {
     const prevCourtId = prevCourtIdRef.current;
     const currentCourtId = selectedCourtId;
     
-    if (prevCourtId !== currentCourtId && user?.id) {
+    if (prevCourtId !== currentCourtId) {
       console.log('🔄 Dashboard - selectedCourtId mudou de', prevCourtId, 'para', currentCourtId, '- forçando atualização');
       prevCourtIdRef.current = currentCourtId;
       
-      // Remover todas as queries antigas primeiro
-      queryClient.removeQueries({ 
-        queryKey: ['appointments'],
-        exact: false 
-      });
+      // Incrementar refreshKey para forçar nova query
+      setRefreshKey(prev => prev + 1);
       
-      // Invalidar todas as queries de appointments
-      queryClient.invalidateQueries({ 
-        queryKey: ['appointments'],
-        exact: false 
-      });
-      
-      // Aguardar um pouco e então refetch para garantir atualização
-      const timeoutId = setTimeout(() => {
-        console.log('🔄 Dashboard - Executando refetch após mudança de quadra');
-        refetch();
-      }, 150);
-      
-      return () => clearTimeout(timeoutId);
-    } else if (prevCourtId !== currentCourtId) {
-      // Atualizar ref mesmo se não houver user ainda
-      prevCourtIdRef.current = currentCourtId;
+      if (user?.id) {
+        // Remover todas as queries antigas primeiro
+        queryClient.removeQueries({ 
+          queryKey: ['appointments'],
+          exact: false 
+        });
+        
+        // Invalidar todas as queries de appointments
+        queryClient.invalidateQueries({ 
+          queryKey: ['appointments'],
+          exact: false 
+        });
+        
+        // Aguardar um pouco e então refetch para garantir atualização
+        const timeoutId = setTimeout(() => {
+          console.log('🔄 Dashboard - Executando refetch após mudança de quadra');
+          refetch();
+        }, 100);
+        
+        return () => clearTimeout(timeoutId);
+      }
     }
   }, [selectedCourtId, user?.id, queryClient, refetch]);
   
