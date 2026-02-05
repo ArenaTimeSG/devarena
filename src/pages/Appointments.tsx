@@ -74,28 +74,14 @@ const Appointments = () => {
     }
   }, [user, loading, navigate]);
 
-  // Forçar refetch quando selectedCourtId mudar
+  // Limpar filteredAppointments quando selectedCourtId mudar (React Query atualiza automaticamente)
   useEffect(() => {
     if (user?.id && selectedCourtId !== undefined) {
-      console.log('🔄 Appointments - Quadra selecionada mudou, forçando refetch:', selectedCourtId);
+      console.log('🔄 Appointments - Quadra selecionada mudou:', selectedCourtId);
       // Limpar filteredAppointments imediatamente para mostrar estado de loading
       setFilteredAppointments([]);
-      // Remover todas as queries antigas de appointments
-      queryClient.removeQueries({ 
-        queryKey: ['appointments', user.id],
-        exact: false 
-      });
-      // Invalidar queries e forçar refetch
-      queryClient.invalidateQueries({ 
-        queryKey: ['appointments', user.id, selectedCourtId ?? 'all'],
-        exact: false 
-      });
-      // Aguardar um pouco e então refetch
-      setTimeout(() => {
-        refetch();
-      }, 100);
     }
-  }, [selectedCourtId, user?.id, queryClient, refetch]);
+  }, [selectedCourtId, user?.id]);
 
   useEffect(() => {
     console.log('🔄 applyFilters - appointments mudou:', appointments.length, 'courtId:', selectedCourtId);
