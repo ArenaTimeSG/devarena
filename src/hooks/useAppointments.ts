@@ -136,6 +136,9 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
     return { clientsMap: newClientsMap, modalitiesMap: newModalitiesMap };
   }, [user?.id]);
 
+  // Garantir que o queryKey sempre tenha um valor consistente
+  const queryKeyCourtId = courtId ?? 'all';
+  
   // Query otimizada para buscar agendamentos
   const {
     data: appointments = [],
@@ -143,7 +146,7 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
     error: queryError,
     refetch,
   } = useQuery({
-    queryKey: ['appointments', user?.id, courtId ?? 'all'],
+    queryKey: ['appointments', user?.id, queryKeyCourtId],
     staleTime: 0, // Sempre considerar dados como stale para forçar refetch quando necessário
     gcTime: 0, // Não manter cache quando queryKey muda (força novo fetch)
     refetchOnMount: 'always', // Sempre refazer query quando o componente montar
@@ -151,7 +154,7 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
     enabled: !!user?.id, // Só executar se houver usuário
     refetchOnReconnect: false,
     queryFn: async (): Promise<AppointmentWithModality[]> => {
-      console.log('🔄 useAppointments - Executando queryFn com courtId:', courtId, 'queryKey:', ['appointments', user?.id, courtId ?? 'all']);
+      console.log('🔄 useAppointments - Executando queryFn com courtId:', courtId, 'queryKey:', ['appointments', user?.id, queryKeyCourtId]);
       if (!user?.id) {
         throw new Error('Usuário não autenticado');
       }

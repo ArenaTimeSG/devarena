@@ -67,9 +67,13 @@ const Dashboard = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { selectedCourtId } = useSelectedCourt();
-  const prevCourtIdRef = useRef<string | null>(selectedCourtId);
+  const prevCourtIdRef = useRef<string | null | undefined>(selectedCourtId);
+  
+  // Garantir que sempre passamos um valor válido (não undefined)
+  const courtIdForQuery = selectedCourtId ?? null;
+  
   const { appointments, getFinancialSummary, isLoading: appointmentsLoading, refetch } = useAppointments({ 
-    courtId: selectedCourtId || undefined 
+    courtId: courtIdForQuery || undefined 
   });
   
   // Forçar atualização quando selectedCourtId mudar
@@ -77,9 +81,15 @@ const Dashboard = () => {
     const prevCourtId = prevCourtIdRef.current;
     const currentCourtId = selectedCourtId;
     
-    if (prevCourtId !== currentCourtId && user?.id && currentCourtId !== null && currentCourtId !== undefined) {
+    if (prevCourtId !== currentCourtId && user?.id) {
       console.log('🔄 Dashboard - selectedCourtId mudou de', prevCourtId, 'para', currentCourtId, '- forçando atualização');
       prevCourtIdRef.current = currentCourtId;
+      
+      // Remover todas as queries antigas primeiro
+      queryClient.removeQueries({ 
+        queryKey: ['appointments'],
+        exact: false 
+      });
       
       // Invalidar todas as queries de appointments
       queryClient.invalidateQueries({ 
@@ -91,9 +101,12 @@ const Dashboard = () => {
       const timeoutId = setTimeout(() => {
         console.log('🔄 Dashboard - Executando refetch após mudança de quadra');
         refetch();
-      }, 100);
+      }, 150);
       
       return () => clearTimeout(timeoutId);
+    } else if (prevCourtId !== currentCourtId) {
+      // Atualizar ref mesmo se não houver user ainda
+      prevCourtIdRef.current = currentCourtId;
     }
   }, [selectedCourtId, user?.id, queryClient, refetch]);
   
