@@ -114,28 +114,27 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
   // Garantir que o queryKey sempre tenha um valor consistente
   const queryKeyCourtId = courtId ?? 'all';
   
-  // Escutar evento de mudança de quadra para forçar refetch
+  // Escutar evento de mudança de quadra e mudanças no courtId para forçar refetch
   useEffect(() => {
+    if (!user?.id) return;
+    
     const handleCourtChange = async (event: CustomEvent) => {
       const { courtId: newCourtId } = event.detail;
-      console.log('🔄 useAppointments - Evento courtChanged recebido, courtId:', newCourtId);
+      const newQueryKeyCourtId = newCourtId ?? 'all';
       
-      // Remover TODAS as queries de appointments
+      console.log('🔄 useAppointments - Evento courtChanged recebido, newCourtId:', newCourtId, 'newQueryKeyCourtId:', newQueryKeyCourtId);
+      
+      // Remover TODAS as queries de appointments do cache completamente
       queryClient.removeQueries({ 
         queryKey: ['appointments'],
         exact: false 
       });
       
-      // Invalidar queries
-      queryClient.invalidateQueries({ 
-        queryKey: ['appointments'],
-        exact: false 
-      });
-      
-      // Aguardar um pouco e então refetch
+      // Aguardar um pouco para garantir que o cache foi limpo
       setTimeout(() => {
+        // Forçar refetch com a nova query key
         queryClient.refetchQueries({ 
-          queryKey: ['appointments', user?.id, newCourtId ?? 'all'],
+          queryKey: ['appointments', user.id, newQueryKeyCourtId],
           exact: true 
         });
       }, 50);
@@ -148,25 +147,25 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
     };
   }, [user?.id, queryClient]);
   
-  // Forçar refetch quando courtId mudar na query key
+  // Forçar refetch quando courtId mudar - React Query deve detectar automaticamente pela query key
   useEffect(() => {
     if (!user?.id) return;
     
     console.log('🔄 useAppointments - courtId mudou para:', courtId, 'queryKeyCourtId:', queryKeyCourtId);
     
-    // Remover queries antigas
+    // Remover TODAS as queries de appointments do cache completamente
     queryClient.removeQueries({ 
-      queryKey: ['appointments', user?.id],
+      queryKey: ['appointments'],
       exact: false 
     });
     
-    // Refetch com a nova query key
+    // Aguardar um pouco e então forçar refetch com a nova query key
     setTimeout(() => {
       queryClient.refetchQueries({ 
-        queryKey: ['appointments', user?.id, queryKeyCourtId],
+        queryKey: ['appointments', user.id, queryKeyCourtId],
         exact: true 
       });
-    }, 100);
+    }, 50);
   }, [courtId, queryKeyCourtId, user?.id, queryClient]);
   
   // Query otimizada para buscar agendamentos
@@ -183,10 +182,17 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
     refetchOnWindowFocus: false,
     enabled: !!user?.id, // Só executar se houver usuário
     refetchOnReconnect: false,
-    queryFn: async (): Promise<AppointmentWithModality[]> => {
-      console.log('🔄 useAppointments - Executando queryFn com courtId:', courtId, 'queryKeyCourtId:', queryKeyCourtId);
-      console.log('🔄 useAppointments - QueryKey completa:', ['appointments', user?.id, queryKeyCourtId]);
-      if (!user?.id) {
+    queryFn: async ({ queryKey }): Promise<AppointmentWithModality[]> => {
+      // Obter courtId atual da query key para evitar problemas de closure
+      const currentCourtId = queryKey[2] === 'all' ? null : (queryKey[2] as string | null);
+      const currentUserId = queryKey[1] as string;
+      
+      console.log('🔄 useAppointments - Executando queryFn');
+      console.log('🔄 useAppointments - QueryKey completa:', queryKey);
+      console.log('🔄 useAppointments - currentCourtId da queryKey:', currentCourtId);
+      console.log('🔄 useAppointments - courtId do closure:', courtId);
+      
+      if (!currentUserId) {
         throw new Error('Usuário não autenticado');
       }
 
@@ -202,14 +208,14 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
         let query = supabase
           .from('appointments')
           .select('*')
-          .eq('user_id', user.id);
+          .eq('user_id', currentUserId);
         
-        // Filtrar por quadra se especificado
+        // Filtrar por quadra se especificado - USAR O VALOR DA QUERY KEY, NÃO DO CLOSURE
         // IMPORTANTE: Quando uma quadra específica está selecionada, mostrar APENAS agendamentos dessa quadra
-        // Quando courtId é null/undefined, não aplicar filtro de quadra (mostrar todos)
-        if (courtId) {
-          console.log('🔍 useAppointments - Filtrando por quadra:', courtId);
-          query = query.eq('court_id', courtId);
+        // Quando currentCourtId é null/undefined, não aplicar filtro de quadra (mostrar todos)
+        if (currentCourtId) {
+          console.log('🔍 useAppointments - Filtrando por quadra:', currentCourtId);
+          query = query.eq('court_id', currentCourtId);
         } else {
           console.log('🔍 useAppointments - Sem filtro de quadra (mostrando todos)');
         }

@@ -76,11 +76,15 @@ const Dashboard = () => {
   
   // Escutar evento customizado de mudança de quadra
   useEffect(() => {
+    if (!user?.id) return;
+    
     const handleCourtChange = async (event: CustomEvent) => {
-      const { courtId } = event.detail;
-      console.log('🔄 Dashboard - Evento courtChanged recebido:', courtId);
+      const { courtId: newCourtId } = event.detail;
+      const newQueryKeyCourtId = newCourtId ?? 'all';
       
-      // Remover TODAS as queries de appointments do cache
+      console.log('🔄 Dashboard - Evento courtChanged recebido, newCourtId:', newCourtId);
+      
+      // Remover TODAS as queries de appointments do cache completamente
       queryClient.removeQueries({ 
         queryKey: ['appointments'],
         exact: false 
@@ -89,10 +93,13 @@ const Dashboard = () => {
       // Forçar atualização do componente
       setRefreshKey(prev => prev + 1);
       
-      // Aguardar um pouco e então refetch
+      // Aguardar um pouco para garantir que o cache foi limpo e então refetch com a nova query key
       setTimeout(async () => {
-        console.log('🔄 Dashboard - Forçando refetch após evento');
-        await refetch();
+        console.log('🔄 Dashboard - Forçando refetch após evento com queryKey:', ['appointments', user.id, newQueryKeyCourtId]);
+        await queryClient.refetchQueries({ 
+          queryKey: ['appointments', user.id, newQueryKeyCourtId],
+          exact: true 
+        });
       }, 100);
     };
 
@@ -101,15 +108,17 @@ const Dashboard = () => {
     return () => {
       window.removeEventListener('courtChanged', handleCourtChange as EventListener);
     };
-  }, [queryClient, refetch]);
+  }, [user?.id, queryClient]);
   
   // Forçar atualização quando selectedCourtId mudar
   useEffect(() => {
     if (!user?.id || selectedCourtId === undefined) return;
     
-    console.log('🔄 Dashboard - Quadra selecionada mudou para:', selectedCourtId);
+    const queryKeyCourtId = selectedCourtId ?? 'all';
     
-    // Remover TODAS as queries de appointments do cache
+    console.log('🔄 Dashboard - Quadra selecionada mudou para:', selectedCourtId, 'queryKeyCourtId:', queryKeyCourtId);
+    
+    // Remover TODAS as queries de appointments do cache completamente
     queryClient.removeQueries({ 
       queryKey: ['appointments'],
       exact: false 
@@ -118,11 +127,15 @@ const Dashboard = () => {
     // Forçar atualização do componente
     setRefreshKey(prev => prev + 1);
     
-    // Refetch imediatamente
+    // Aguardar um pouco e então refetch com a nova query key
     setTimeout(async () => {
-      await refetch();
+      console.log('🔄 Dashboard - Forçando refetch com queryKey:', ['appointments', user.id, queryKeyCourtId]);
+      await queryClient.refetchQueries({ 
+        queryKey: ['appointments', user.id, queryKeyCourtId],
+        exact: true 
+      });
     }, 100);
-  }, [selectedCourtId, user?.id, queryClient, refetch]);
+  }, [selectedCourtId, user?.id, queryClient]);
   
   const navigate = useNavigate();
   const [currentWeek, setCurrentWeek] = useState(new Date());
@@ -386,6 +399,12 @@ const Dashboard = () => {
 
 
   // Função para filtrar agendamentos da semana atual
+  // Log quando appointments mudar para debug
+  useEffect(() => {
+    console.log('🔄 Dashboard - appointments atualizado:', appointments.length, 'selectedCourtId:', selectedCourtId);
+    console.log('🔄 Dashboard - Primeiros 3 appointments:', appointments.slice(0, 3).map(apt => ({ id: apt.id, court_id: apt.court_id, date: apt.date })));
+  }, [appointments, selectedCourtId]);
+
   const getAppointmentsForCurrentWeek = () => {
     // Usar a mesma lógica do ResponsiveCalendar para garantir consistência
     const weekStart = startOfWeek(currentWeek, { locale: ptBR });
@@ -1125,7 +1144,7 @@ const Dashboard = () => {
            ) : (
               viewMode === 'weekly' ? (
                 <ResponsiveCalendar
-                  key={`calendar-${selectedCourtId || 'all'}-${currentWeek.getTime()}-${refreshKey}`} // Forçar re-render quando quadra, semana ou refreshKey mudarem
+                  key={`calendar-${selectedCourtId || 'all'}-${currentWeek.getTime()}-${refreshKey}-${appointments.length}`} // Forçar re-render quando quadra, semana, refreshKey ou appointments mudarem
                   currentWeek={currentWeek}
                   setCurrentWeek={setCurrentWeek}
                   appointments={getAppointmentsForCurrentWeek()}
