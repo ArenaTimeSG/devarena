@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQueryClient } from '@tanstack/react-query';
@@ -67,14 +67,35 @@ const Dashboard = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { selectedCourtId } = useSelectedCourt();
+  const prevCourtIdRef = useRef<string | null>(selectedCourtId);
   const { appointments, getFinancialSummary, isLoading: appointmentsLoading, refetch } = useAppointments({ 
     courtId: selectedCourtId || undefined 
   });
   
-  // Log quando selectedCourtId mudar
+  // Forçar atualização quando selectedCourtId mudar
   useEffect(() => {
-    console.log('🔄 Dashboard - selectedCourtId mudou:', selectedCourtId);
-  }, [selectedCourtId]);
+    const prevCourtId = prevCourtIdRef.current;
+    const currentCourtId = selectedCourtId;
+    
+    if (prevCourtId !== currentCourtId && user?.id && currentCourtId !== null && currentCourtId !== undefined) {
+      console.log('🔄 Dashboard - selectedCourtId mudou de', prevCourtId, 'para', currentCourtId, '- forçando atualização');
+      prevCourtIdRef.current = currentCourtId;
+      
+      // Invalidar todas as queries de appointments
+      queryClient.invalidateQueries({ 
+        queryKey: ['appointments'],
+        exact: false 
+      });
+      
+      // Aguardar um pouco e então refetch para garantir atualização
+      const timeoutId = setTimeout(() => {
+        console.log('🔄 Dashboard - Executando refetch após mudança de quadra');
+        refetch();
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [selectedCourtId, user?.id, queryClient, refetch]);
   
   // Log quando appointments mudar
   useEffect(() => {
