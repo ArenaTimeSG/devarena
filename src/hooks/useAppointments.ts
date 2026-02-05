@@ -58,7 +58,7 @@ const modalitiesCache = new Map<string, Map<string, any>>();
 
 export interface UseAppointmentsOptions {
   courtId?: string | null; // Se fornecido, filtra por quadra específica
-  refreshKey?: number; // Chave para forçar refetch quando mudar
+  forceRefresh?: number; // Número que muda para forçar nova query
 }
 
 export const useAppointments = (options?: UseAppointmentsOptions) => {
@@ -66,32 +66,7 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
-  const { courtId, refreshKey } = options || {};
-  const prevCourtIdRef = useRef<string | undefined>(courtId);
-  
-  // Log quando courtId mudar e forçar refetch se necessário
-  useEffect(() => {
-    const prevCourtId = prevCourtIdRef.current;
-    const currentCourtId = courtId;
-    
-    console.log('🔄 useAppointments - courtId mudou:', { 
-      anterior: prevCourtId, 
-      atual: currentCourtId, 
-      queryKey: ['appointments', user?.id, currentCourtId ?? 'all'] 
-    });
-    
-    // Se o courtId realmente mudou, atualizar a ref e forçar refetch
-    if (prevCourtId !== currentCourtId && user?.id) {
-      prevCourtIdRef.current = currentCourtId;
-      console.log('🔄 useAppointments - CourtId mudou de', prevCourtId, 'para', currentCourtId, '- invalidando queries');
-      
-      // Invalidar todas as queries de appointments para forçar novo fetch
-      queryClient.invalidateQueries({ 
-        queryKey: ['appointments'],
-        exact: false 
-      });
-    }
-  }, [courtId, user?.id, queryClient]);
+  const { courtId } = options || {};
 
   // Função otimizada para buscar dados relacionados
   const fetchRelatedData = useCallback(async (appointments: any[]) => {
@@ -147,11 +122,11 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
     error: queryError,
     refetch,
   } = useQuery({
-    queryKey: ['appointments', user?.id, queryKeyCourtId, refreshKey ?? 0],
-    staleTime: 0, // Sempre considerar dados como stale para forçar refetch quando necessário
-    gcTime: 0, // Não manter cache quando queryKey muda (força novo fetch)
-    refetchOnMount: 'always', // Sempre refazer query quando o componente montar
-    refetchOnWindowFocus: false, // Não refazer quando a janela ganhar foco
+    queryKey: ['appointments', user?.id, queryKeyCourtId, forceRefresh ?? 0],
+    staleTime: 0, // Sempre considerar dados como stale
+    gcTime: 0, // Não manter cache
+    refetchOnMount: 'always', // Sempre refazer quando montar
+    refetchOnWindowFocus: false,
     enabled: !!user?.id, // Só executar se houver usuário
     refetchOnReconnect: false,
     queryFn: async (): Promise<AppointmentWithModality[]> => {

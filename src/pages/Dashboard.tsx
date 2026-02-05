@@ -67,51 +67,36 @@ const Dashboard = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { selectedCourtId } = useSelectedCourt();
-  const prevCourtIdRef = useRef<string | null | undefined>(selectedCourtId);
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [forceRefresh, setForceRefresh] = useState(0);
   
-  // Garantir que sempre passamos um valor válido (não undefined)
-  const courtIdForQuery = selectedCourtId ?? null;
-  
+  // Passar courtId diretamente - React Query vai detectar mudança no queryKey
   const { appointments, getFinancialSummary, isLoading: appointmentsLoading, refetch } = useAppointments({ 
-    courtId: courtIdForQuery || undefined,
-    refreshKey // Passar refreshKey para forçar nova query
+    courtId: selectedCourtId || undefined,
+    forceRefresh // Usar forceRefresh para forçar nova query
   });
   
-  // Forçar atualização quando selectedCourtId mudar
+  // Forçar atualização quando selectedCourtId mudar - SOLUÇÃO SIMPLES E DIRETA
   useEffect(() => {
-    const prevCourtId = prevCourtIdRef.current;
-    const currentCourtId = selectedCourtId;
+    if (!user?.id) return;
     
-    if (prevCourtId !== currentCourtId) {
-      console.log('🔄 Dashboard - selectedCourtId mudou de', prevCourtId, 'para', currentCourtId, '- forçando atualização');
-      prevCourtIdRef.current = currentCourtId;
-      
-      // Incrementar refreshKey para forçar nova query
-      setRefreshKey(prev => prev + 1);
-      
-      if (user?.id) {
-        // Remover todas as queries antigas primeiro
-        queryClient.removeQueries({ 
-          queryKey: ['appointments'],
-          exact: false 
-        });
-        
-        // Invalidar todas as queries de appointments
-        queryClient.invalidateQueries({ 
-          queryKey: ['appointments'],
-          exact: false 
-        });
-        
-        // Aguardar um pouco e então refetch para garantir atualização
-        const timeoutId = setTimeout(() => {
-          console.log('🔄 Dashboard - Executando refetch após mudança de quadra');
-          refetch();
-        }, 100);
-        
-        return () => clearTimeout(timeoutId);
-      }
-    }
+    console.log('🔄 Dashboard - Quadra selecionada mudou para:', selectedCourtId);
+    
+    // Incrementar forceRefresh para forçar nova query
+    setForceRefresh(prev => prev + 1);
+    
+    // Remover TODAS as queries de appointments
+    queryClient.removeQueries({ 
+      queryKey: ['appointments'],
+      exact: false 
+    });
+    
+    // Refetch imediatamente após um pequeno delay
+    const timeoutId = setTimeout(() => {
+      console.log('🔄 Dashboard - Forçando refetch após mudança de quadra');
+      refetch();
+    }, 100);
+    
+    return () => clearTimeout(timeoutId);
   }, [selectedCourtId, user?.id, queryClient, refetch]);
   
   // Log quando appointments mudar
