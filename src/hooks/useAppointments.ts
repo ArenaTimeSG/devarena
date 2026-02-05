@@ -123,8 +123,8 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
     refetch,
   } = useQuery({
     queryKey: ['appointments', user?.id, queryKeyCourtId, forceRefresh ?? 0],
-    staleTime: 0, // Sempre considerar dados como stale
-    gcTime: 0, // Não manter cache
+    staleTime: 0, // Sempre considerar dados como stale para garantir atualização imediata quando a quadra mudar
+    gcTime: 1000 * 60 * 5, // 5 minutos de cache
     refetchOnMount: 'always', // Sempre refazer quando montar
     refetchOnWindowFocus: false,
     enabled: !!user?.id, // Só executar se houver usuário

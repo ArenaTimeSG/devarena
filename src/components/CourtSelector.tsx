@@ -72,16 +72,7 @@ export function CourtSelector({ className, showLabel = true }: CourtSelectorProp
         onValueChange={handleValueChange}
       >
         <SelectTrigger className="w-full">
-          <SelectValue placeholder="Selecione uma quadra">
-            {selectedCourt ? (
-              <span className="flex items-center gap-2">
-                <Building2 className="h-4 w-4" />
-                {selectedCourt.name}
-              </span>
-            ) : (
-              'Selecione uma quadra'
-            )}
-          </SelectValue>
+          <SelectValue placeholder="Selecione uma quadra" />
         </SelectTrigger>
         <SelectContent>
           {courts.map((court) => (
