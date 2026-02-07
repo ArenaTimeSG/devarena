@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useCourts } from '@/hooks/useCourts';
 import { useSelectedCourt } from '@/hooks/useSelectedCourt';
@@ -10,13 +10,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Building2 } from 'lucide-react';
+import { logger } from '@/utils/logger';
 
 type CourtSelectorProps = {
   className?: string;
   showLabel?: boolean;
 };
 
-export function CourtSelector({ className, showLabel = true }: CourtSelectorProps) {
+export const CourtSelector = memo(function CourtSelector({ className, showLabel = true }: CourtSelectorProps) {
   const { courts, isLoading } = useCourts();
   const { selectedCourtId, setSelectedCourtId } = useSelectedCourt();
   const [localCourtId, setLocalCourtId] = useState<string>(selectedCourtId || '');
@@ -35,7 +36,7 @@ export function CourtSelector({ className, showLabel = true }: CourtSelectorProp
       return;
     }
 
-    console.log('🔄 CourtSelector - Mudando de', selectedCourtId, 'para', newCourtId);
+    logger.log('🔄 CourtSelector - Mudando de', selectedCourtId, 'para', newCourtId);
     
     // Atualizar estado local imediatamente para feedback visual
     setLocalCourtId(value);
@@ -51,16 +52,16 @@ export function CourtSelector({ className, showLabel = true }: CourtSelectorProp
     if (!isPublicRoute) {
       if (location.pathname !== '/dashboard') {
         // Se não estiver no dashboard, navegar primeiro
-        console.log('🚀 CourtSelector - Navegando para /dashboard');
+        logger.log('🚀 CourtSelector - Navegando para /dashboard');
         navigate('/dashboard');
         // Aguardar navegação e então recarregar
         setTimeout(() => {
-          console.log('🔄 CourtSelector - Recarregando página para atualizar dados');
+          logger.log('🔄 CourtSelector - Recarregando página para atualizar dados');
           window.location.reload();
         }, 100);
       } else {
         // Se já estiver no dashboard, recarregar diretamente
-        console.log('🔄 CourtSelector - Recarregando página para atualizar dados');
+        logger.log('🔄 CourtSelector - Recarregando página para atualizar dados');
         window.location.reload();
       }
     }
@@ -117,4 +118,4 @@ export function CourtSelector({ className, showLabel = true }: CourtSelectorProp
       </Select>
     </div>
   );
-}
+});

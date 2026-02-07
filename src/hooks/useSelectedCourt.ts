@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useCourts } from './useCourts';
 import { useAuth } from './useAuth';
+import { logger } from '@/utils/logger';
 
 /**
  * Hook para gerenciar a quadra selecionada
@@ -30,7 +31,7 @@ export const useSelectedCourt = () => {
     try {
       savedCourtId = localStorage.getItem(storageKey);
     } catch (error) {
-      console.error('Erro ao acessar localStorage:', error);
+      logger.error('Erro ao acessar localStorage:', error);
     }
 
     if (savedCourtId && courts.length > 0) {
@@ -65,7 +66,7 @@ export const useSelectedCourt = () => {
             initializedRef.current = true;
           }
         }).catch((error) => {
-          console.error('Erro ao criar quadra padrão:', error);
+          logger.error('Erro ao criar quadra padrão:', error);
         });
       }
     } else if (getOrCreateDefaultCourt) {
@@ -100,7 +101,7 @@ export const useSelectedCourt = () => {
         try {
           localStorage.removeItem(storageKey);
         } catch (error) {
-          console.error('Erro ao remover do localStorage:', error);
+          logger.error('Erro ao remover do localStorage:', error);
         }
       }
     }

@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { logger } from '@/utils/logger';
 
 export interface AppointmentWithModality {
   id: string;
@@ -115,18 +116,8 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
   // Usar useMemo para garantir que queryKeyCourtId seja recalculado quando courtId mudar
   // Se courtId for undefined ou null, usar 'all' para consistência
   const queryKeyCourtId = useMemo(() => {
-    const value = courtId ?? 'all';
-    console.log('🔄 useAppointments - queryKeyCourtId recalculado:', value, 'de courtId:', courtId);
-    return value;
+    return courtId ?? 'all';
   }, [courtId]);
-  
-  // Log quando courtId mudar - React Query vai automaticamente executar a nova query quando a query key mudar
-  useEffect(() => {
-    if (!user?.id) return;
-    
-    console.log('🔄 useAppointments - courtId mudou para:', courtId, 'queryKeyCourtId:', queryKeyCourtId);
-    console.log('🔄 useAppointments - Nova query key será:', ['appointments', user.id, queryKeyCourtId]);
-  }, [courtId, queryKeyCourtId, user?.id]);
   
   // Query otimizada para buscar agendamentos
   const {
@@ -136,27 +127,19 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
     refetch,
   } = useQuery({
     queryKey: ['appointments', user?.id, queryKeyCourtId],
-    staleTime: 0, // Sempre considerar dados como stale para garantir atualização imediata quando a quadra mudar
-    gcTime: 0, // Não manter cache - sempre buscar dados frescos quando a query key mudar
-    refetchOnMount: 'always', // Sempre refazer quando montar
+    staleTime: 1000 * 30, // 30 segundos - dados frescos mas com cache
+    gcTime: 1000 * 60 * 5, // 5 minutos de cache
+    refetchOnMount: true, // Refazer quando montar
     refetchOnWindowFocus: false,
-    enabled: !!user?.id, // Só executar se houver usuário
+    enabled: !!user?.id,
     refetchOnReconnect: false,
-    // Garantir que a query seja executada quando a query key mudar
-    queryKeyHashFn: undefined, // Usar hash padrão do React Query
     queryFn: async ({ queryKey }): Promise<AppointmentWithModality[]> => {
       // Obter courtId atual da query key para evitar problemas de closure
       // queryKey[2] pode ser 'all' (quando não há filtro) ou uma string (UUID da quadra)
       const currentCourtId = queryKey[2] === 'all' || queryKey[2] === null || queryKey[2] === undefined ? null : (queryKey[2] as string);
       const currentUserId = queryKey[1] as string;
       
-      console.log('🔄 useAppointments - Executando queryFn');
-      console.log('🔄 useAppointments - QueryKey completa:', queryKey);
-      console.log('🔄 useAppointments - queryKey[2]:', queryKey[2]);
-      console.log('🔄 useAppointments - currentCourtId da queryKey:', currentCourtId);
-      console.log('🔄 useAppointments - courtId do closure:', courtId);
-      console.log('🔄 useAppointments - queryKeyCourtId:', queryKeyCourtId);
-      console.log('🔄 useAppointments - USANDO currentCourtId da queryKey (não do closure):', currentCourtId);
+      // Logs removidos em produção para melhor performance
       
       if (!currentUserId) {
         throw new Error('Usuário não autenticado');
@@ -180,10 +163,7 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
         // IMPORTANTE: Quando uma quadra específica está selecionada, mostrar APENAS agendamentos dessa quadra
         // Quando currentCourtId é null/undefined, não aplicar filtro de quadra (mostrar todos)
         if (currentCourtId) {
-          console.log('🔍 useAppointments - Filtrando por quadra:', currentCourtId);
           query = query.eq('court_id', currentCourtId);
-        } else {
-          console.log('🔍 useAppointments - Sem filtro de quadra (mostrando todos)');
         }
         
         const { data: pageData, error: pageError } = await query
@@ -191,7 +171,7 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
           .range(from, from + pageSize - 1);
 
         if (pageError) {
-          console.error('❌ Erro ao buscar agendamentos:', pageError);
+          logger.error('❌ Erro ao buscar agendamentos:', pageError);
           error = pageError;
           break;
         }
@@ -208,7 +188,7 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
         
         // Proteção contra loop infinito (máximo 10 páginas = 10.000 registros)
         if (from >= pageSize * 10) {
-          console.warn('⚠️ Limite de paginação atingido (10.000 registros)');
+          logger.warn('⚠️ Limite de paginação atingido (10.000 registros)');
           hasMore = false;
         }
       }
@@ -336,13 +316,11 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
       // IMPORTANTE: Sempre associar agendamento à quadra selecionada
       if (appointmentData.court_id) {
         insertData.court_id = appointmentData.court_id;
-        console.log('🔍 useAppointments - Criando agendamento com court_id do appointmentData:', appointmentData.court_id);
       } else if (courtId) {
         // Se não fornecido mas há courtId no contexto, usar ele
         insertData.court_id = courtId;
-        console.log('🔍 useAppointments - Criando agendamento com court_id do contexto:', courtId);
       } else {
-        console.warn('⚠️ useAppointments - Criando agendamento SEM court_id (será null)');
+        logger.warn('⚠️ useAppointments - Criando agendamento SEM court_id (será null)');
         insertData.court_id = null;
       }
 

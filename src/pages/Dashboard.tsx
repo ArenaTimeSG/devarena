@@ -75,14 +75,9 @@ const Dashboard = () => {
     courtId: selectedCourtId || undefined
   });
   
-  // Log quando selectedCourtId mudar
+  // Atualizar componente quando selectedCourtId mudar
   useEffect(() => {
     if (!user?.id) return;
-    
-    console.log('🔄 Dashboard - Quadra selecionada mudou para:', selectedCourtId);
-    console.log('🔄 Dashboard - Passando para useAppointments:', selectedCourtId || undefined);
-    console.log('🔄 Dashboard - QueryKey esperada:', ['appointments', user.id, (selectedCourtId || undefined) ?? 'all']);
-    
     // Forçar atualização do componente
     setRefreshKey(prev => prev + 1);
   }, [selectedCourtId, user?.id]);

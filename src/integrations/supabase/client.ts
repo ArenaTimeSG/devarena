@@ -54,11 +54,4 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
   },
 });
 
-// Verificar se o cliente foi criado corretamente
-if (isBrowser) {
-  console.log('🔧 Cliente Supabase configurado para browser');
-  console.log('URL:', SUPABASE_URL);
-  console.log('Storage disponível:', !!getStorage());
-} else {
-  console.log('🔧 Cliente Supabase configurado para servidor');
-}
+// Logs removidos para melhor performance em produção
