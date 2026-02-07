@@ -4,10 +4,15 @@ import { CreatePreferenceRequest, CreatePreferenceResponse } from '../types/paym
 import { AdminKeysService } from '../services/adminKeysService';
 import { PaymentService } from '../services/paymentService';
 import mercadopago from 'mercadopago';
+import { validateCreatePreference, validate } from '../middleware/validators';
+import { sanitizeForLogging } from '../middleware/sanitizeLogs';
 
-export const createPreference = async (req: Request, res: Response) => {
-  console.log('🚀 [CREATE-PREFERENCE] Iniciando criação de preferência');
-  console.log('📥 [CREATE-PREFERENCE] Dados recebidos:', JSON.stringify(req.body, null, 2));
+const createPreferenceHandler = async (req: Request, res: Response) => {
+    console.log('🚀 [CREATE-PREFERENCE] Iniciando criação de preferência');
+    
+    // Sanitizar dados antes de logar
+    const sanitizedBody = sanitizeForLogging(req.body);
+    console.log('📥 [CREATE-PREFERENCE] Dados recebidos:', JSON.stringify(sanitizedBody, null, 2));
 
   try {
     const { owner_id, booking_id, price, items, return_url }: CreatePreferenceRequest = req.body;
@@ -75,7 +80,9 @@ export const createPreference = async (req: Request, res: Response) => {
       metadata: { owner_id, booking_id }
     };
 
-    console.log('💳 [CREATE-PREFERENCE] Dados da preferência:', JSON.stringify(preference, null, 2));
+    // Sanitizar preferência antes de logar (remove access_token)
+    const sanitizedPreference = sanitizeForLogging(preference);
+    console.log('💳 [CREATE-PREFERENCE] Dados da preferência:', JSON.stringify(sanitizedPreference, null, 2));
 
     const mpResp = await (mercadopago as any).preferences.create(preference);
     const preferenceData = mpResp.body;
@@ -127,11 +134,19 @@ export const createPreference = async (req: Request, res: Response) => {
     console.log('📤 [CREATE-PREFERENCE] Retornando resposta:', responseData);
     res.json(responseData);
 
-  } catch (error) {
-    console.error('❌ [CREATE-PREFERENCE] Erro ao criar preferência:', error);
+  } catch (error: any) {
+    const sanitizedError = sanitizeForLogging(error);
+    console.error('❌ [CREATE-PREFERENCE] Erro ao criar preferência:', sanitizedError);
     res.status(500).json({
       success: false,
       error: 'Erro interno do servidor'
     } as CreatePreferenceResponse);
   }
 };
+
+// Exportar com validação
+export const createPreference = [
+  ...validateCreatePreference,
+  validate,
+  createPreferenceHandler
+] as any;

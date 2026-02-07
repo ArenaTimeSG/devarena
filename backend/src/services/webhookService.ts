@@ -153,11 +153,19 @@ export class WebhookService {
         return { success: true, message: 'Notificação já processada' };
       }
 
-      // Validar assinatura
+      // Validar assinatura (OBRIGATÓRIO em produção)
       const isValidSignature = this.verifySignature(req, adminKeys.webhook_secret);
       if (!isValidSignature) {
         console.warn('⚠️ [WEBHOOK-SERVICE] Assinatura inválida para pagamento:', paymentId);
-        // Continuar processamento mesmo com assinatura inválida (log apenas)
+        
+        // Em produção, rejeitar webhooks sem assinatura válida
+        if (process.env.NODE_ENV === 'production') {
+          return { 
+            success: false, 
+            message: 'Assinatura de webhook inválida' 
+          };
+        }
+        // Em desenvolvimento, apenas avisar mas continuar
       }
 
       // Buscar detalhes do pagamento

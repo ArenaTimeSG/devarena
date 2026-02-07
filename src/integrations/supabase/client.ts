@@ -2,8 +2,20 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://bnonmzdwqdqjkdoyulqd.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJub25temR3cWRxamtkb3l1bHFkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQ1MzE3MjMsImV4cCI6MjA4MDEwNzcyM30.HHCK1_PlhVwcUofTBngX3ChoQxEXCfToolHTrePmfj4";
+// Validar variáveis de ambiente obrigatórias
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  const missing = [];
+  if (!SUPABASE_URL) missing.push('VITE_SUPABASE_URL');
+  if (!SUPABASE_PUBLISHABLE_KEY) missing.push('VITE_SUPABASE_ANON_KEY');
+  
+  throw new Error(
+    `❌ Variáveis de ambiente do Supabase não configuradas: ${missing.join(', ')}\n` +
+    `Por favor, configure essas variáveis no arquivo .env`
+  );
+}
 
 // Verificar se estamos no browser
 const isBrowser = typeof window !== 'undefined';

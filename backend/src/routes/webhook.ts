@@ -1,12 +1,19 @@
 import { Request, Response } from 'express';
 import { WebhookService } from '../services/webhookService';
+import { sanitizeForLogging } from '../middleware/sanitizeLogs';
 
 export const webhook = async (req: Request, res: Response) => {
   console.log('🚀 [WEBHOOK] Webhook recebido do Mercado Pago');
   console.log('📥 [WEBHOOK] Method:', req.method);
-  console.log('📥 [WEBHOOK] Query:', req.query);
-  console.log('📥 [WEBHOOK] Body:', JSON.stringify(req.body, null, 2));
-  console.log('📥 [WEBHOOK] Headers:', JSON.stringify(req.headers, null, 2));
+  
+  // Sanitizar dados antes de logar
+  const sanitizedQuery = sanitizeForLogging(req.query);
+  const sanitizedBody = sanitizeForLogging(req.body);
+  const sanitizedHeaders = sanitizeForLogging(req.headers, ['x-signature', 'authorization']);
+  
+  console.log('📥 [WEBHOOK] Query:', JSON.stringify(sanitizedQuery, null, 2));
+  console.log('📥 [WEBHOOK] Body:', JSON.stringify(sanitizedBody, null, 2));
+  console.log('📥 [WEBHOOK] Headers:', JSON.stringify(sanitizedHeaders, null, 2));
 
   try {
     // Processar webhook usando o serviço
