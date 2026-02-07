@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react-swc' // Usar SWC para builds mais rápidos
+import react from '@vitejs/plugin-react' // Mantendo plugin padrão (SWC já está instalado como alternativa)
 import path from 'path'
 
 // https://vitejs.dev/config/
