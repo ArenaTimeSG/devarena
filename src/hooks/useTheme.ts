@@ -100,6 +100,15 @@ export const useTheme = () => {
     setThemeConfig(updatedConfig);
     applyTheme(updatedConfig);
     
+    // Salvar no localStorage para aplicação imediata
+    if (updatedConfig.mode === 'dark') {
+      localStorage.setItem('theme', 'dark');
+    } else if (updatedConfig.mode === 'light') {
+      localStorage.setItem('theme', 'light');
+    } else {
+      localStorage.removeItem('theme'); // auto usa preferência do sistema
+    }
+    
     // Salvar no banco de dados
     await updateTheme(updatedConfig.mode);
   };
@@ -117,19 +126,37 @@ export const useTheme = () => {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, [themeConfig.mode]);
 
-  // Aplicar tema inicial
+  // Aplicar tema inicial - executar imediatamente e quando settings mudar
   useEffect(() => {
     logger.log('🎨 Settings theme:', settings?.theme);
+    
     if (settings?.theme) {
       const config = { ...DEFAULT_THEME_CONFIG, mode: settings.theme as ThemeMode };
       logger.log('🎨 Configurando tema inicial:', config);
       setThemeConfig(config);
       applyTheme(config);
+      
+      // Sincronizar localStorage
+      if (config.mode === 'dark') {
+        localStorage.setItem('theme', 'dark');
+      } else if (config.mode === 'light') {
+        localStorage.setItem('theme', 'light');
+      } else {
+        localStorage.removeItem('theme');
+      }
     } else {
-      // Se não houver tema salvo, aplicar o tema padrão
-      logger.log('🎨 Nenhum tema salvo, aplicando padrão:', DEFAULT_THEME_CONFIG);
-      setThemeConfig(DEFAULT_THEME_CONFIG);
-      applyTheme(DEFAULT_THEME_CONFIG);
+      // Se não houver tema salvo, verificar localStorage ou usar padrão
+      const savedTheme = localStorage.getItem('theme') as ThemeMode | null;
+      if (savedTheme && (savedTheme === 'dark' || savedTheme === 'light')) {
+        const config = { ...DEFAULT_THEME_CONFIG, mode: savedTheme };
+        logger.log('🎨 Usando tema do localStorage:', config);
+        setThemeConfig(config);
+        applyTheme(config);
+      } else {
+        logger.log('🎨 Nenhum tema salvo, aplicando padrão:', DEFAULT_THEME_CONFIG);
+        setThemeConfig(DEFAULT_THEME_CONFIG);
+        applyTheme(DEFAULT_THEME_CONFIG);
+      }
     }
   }, [settings?.theme]);
 

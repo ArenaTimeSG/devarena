@@ -398,21 +398,21 @@ const Dashboard = () => {
     
     if (recurrence_id) {
       switch (effectiveStatus) {
-        case 'pago': return 'bg-green-100 text-green-800 border-green-200';
-        case 'a_cobrar': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-        case 'cortesia': return 'bg-pink-100 text-pink-800 border-pink-200';
-        case 'agendado': return 'bg-blue-100 text-blue-800 border-blue-200';
-        case 'cancelado': return 'bg-gray-100 text-gray-600 border-gray-200 line-through';
-        default: return 'bg-blue-50 text-blue-700 border-blue-200';
+        case 'pago': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700';
+        case 'a_cobrar': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-700';
+        case 'cortesia': return 'bg-pink-100 dark:bg-pink-900/30 text-pink-800 dark:text-pink-200 border-pink-200 dark:border-pink-700';
+        case 'agendado': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700';
+        case 'cancelado': return 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 line-through';
+        default: return 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-700';
       }
     } else {
       switch (effectiveStatus) {
-        case 'pago': return 'bg-green-100 text-green-800 border-green-200';
-        case 'a_cobrar': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-        case 'cortesia': return 'bg-pink-100 text-pink-800 border-pink-200';
-        case 'agendado': return 'bg-purple-100 text-purple-800 border-purple-200';
-        case 'cancelado': return 'bg-gray-100 text-gray-600 border-gray-200 line-through';
-        default: return 'bg-purple-50 text-purple-700 border-purple-200';
+        case 'pago': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 border-green-200 dark:border-green-700';
+        case 'a_cobrar': return 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 border-yellow-200 dark:border-yellow-700';
+        case 'cortesia': return 'bg-pink-100 dark:bg-pink-900/30 text-pink-800 dark:text-pink-200 border-pink-200 dark:border-pink-700';
+        case 'agendado': return 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-200 border-purple-200 dark:border-purple-700';
+        case 'cancelado': return 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border-gray-200 dark:border-gray-700 line-through';
+        default: return 'bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-700';
       }
     }
   };
@@ -702,20 +702,20 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
         <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <p className="text-slate-600 font-medium">Carregando dashboard...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
+          <p className="text-slate-600 dark:text-slate-400 font-medium">Carregando dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       {/* Modern Sidebar */}
       <motion.aside 
-        className="fixed left-0 top-0 h-full w-16 sm:w-20 bg-white/80 backdrop-blur-xl border-r border-slate-200/60 shadow-xl z-40"
+        className="fixed left-0 top-0 h-full w-16 sm:w-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-r border-slate-200/60 dark:border-slate-700/60 shadow-xl z-40"
         initial={{ x: -100 }}
         animate={{ x: 0 }}
         transition={{ duration: 0.5 }}
@@ -742,7 +742,7 @@ const Dashboard = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-12 h-12 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl transition-all duration-300 shadow-sm"
+                className="w-12 h-12 bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-xl transition-all duration-300 shadow-sm"
                 title="Dashboard"
               >
                 <Calendar className="h-5 w-5" />
@@ -759,7 +759,7 @@ const Dashboard = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/appointments')}
-                className="w-12 h-12 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl transition-all duration-300 shadow-sm"
+                className="w-12 h-12 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-xl transition-all duration-300 shadow-sm"
                 title="Agendamentos"
               >
                 <Clock className="h-5 w-5" />
@@ -776,7 +776,7 @@ const Dashboard = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/appointments/new')}
-                className="w-12 h-12 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl transition-all duration-300 shadow-sm"
+                className="w-12 h-12 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-xl transition-all duration-300 shadow-sm"
                 title="Novo Agendamento"
               >
                 <Plus className="h-5 w-5" />
@@ -793,7 +793,7 @@ const Dashboard = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/clients')}
-                className="w-12 h-12 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl transition-all duration-300 shadow-sm"
+                className="w-12 h-12 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-xl transition-all duration-300 shadow-sm"
                 title="Clientes"
               >
                 <Users className="h-5 w-5" />
@@ -810,7 +810,7 @@ const Dashboard = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/financial')}
-                className="w-12 h-12 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl transition-all duration-300 shadow-sm"
+                className="w-12 h-12 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-xl transition-all duration-300 shadow-sm"
                 title="Financeiro"
               >
                 <DollarSign className="h-5 w-5" />
@@ -828,7 +828,7 @@ const Dashboard = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/settings')}
-                className="w-12 h-12 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-xl transition-all duration-300 shadow-sm"
+                className="w-12 h-12 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 rounded-xl transition-all duration-300 shadow-sm"
                 title="Configurações"
               >
                 <Settings className="h-5 w-5" />
@@ -847,12 +847,12 @@ const Dashboard = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="w-full h-12 bg-gradient-to-br from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 text-blue-700 rounded-xl transition-all duration-300 shadow-sm"
+                    className="w-full h-12 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 hover:from-blue-100 hover:to-indigo-100 dark:hover:from-blue-900/50 dark:hover:to-indigo-900/50 text-blue-700 dark:text-blue-300 rounded-xl transition-all duration-300 shadow-sm"
                     title={userProfile?.name || 'Usuário'}
                   >
-                    <Avatar className="h-6 w-6 border-2 border-blue-200">
+                    <Avatar className="h-6 w-6 border-2 border-blue-200 dark:border-blue-700">
                       <AvatarImage src="" alt={userProfile?.name || 'Usuário'} />
-                      <AvatarFallback className="bg-blue-100 text-blue-700 text-xs font-bold">
+                      <AvatarFallback className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs font-bold">
                         {userProfile?.name?.charAt(0).toUpperCase() || 'U'}
                       </AvatarFallback>
                     </Avatar>
@@ -864,7 +864,7 @@ const Dashboard = () => {
                       <div className="flex items-center gap-3">
                         <Avatar className="h-10 w-10">
                           <AvatarImage src="" alt={userProfile?.name || 'Usuário'} />
-                          <AvatarFallback className="bg-blue-100 text-blue-700 font-bold">
+                          <AvatarFallback className="bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-bold">
                             {userProfile?.name?.charAt(0).toUpperCase() || 'U'}
                           </AvatarFallback>
                         </Avatar>
@@ -878,7 +878,7 @@ const Dashboard = () => {
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   
-                  <div className="px-3 py-2 bg-slate-50 rounded-lg mx-2">
+                  <div className="px-3 py-2 bg-slate-50 dark:bg-slate-800 rounded-lg mx-2">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Mail className="h-4 w-4" />
                       <span className="truncate">{userProfile?.email}</span>
@@ -918,7 +918,7 @@ const Dashboard = () => {
       <div className="ml-16 sm:ml-20">
         {/* Modern Header */}
         <motion.header 
-          className="bg-white/80 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-30 shadow-sm"
+          className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-700/60 sticky top-0 z-30 shadow-sm"
           initial={{ y: -100 }}
           animate={{ y: 0 }}
           transition={{ duration: 0.5 }}
@@ -932,12 +932,12 @@ const Dashboard = () => {
                   <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
                     ArenaTime
                   </h1>
-                  <p className="text-slate-600 text-xs sm:text-sm font-medium hidden sm:block">Dashboard de Gestão</p>
+                  <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm font-medium hidden sm:block">Dashboard de Gestão</p>
                 </div>
                 
                 {/* Seletor de Quadra integrado - apenas na visualização semanal */}
                 {viewMode === 'weekly' && (
-                  <div className="hidden md:block border-l border-slate-200 pl-4">
+                  <div className="hidden md:block border-l border-slate-200 dark:border-slate-700 pl-4">
                     <CourtSelector className="max-w-xs" showLabel={false} />
                   </div>
                 )}
@@ -951,7 +951,7 @@ const Dashboard = () => {
                       variant="outline"
                       size="sm"
                       onClick={generateAvailableHoursPDF}
-                      className="bg-white hover:bg-slate-50 border-slate-200 hover:border-slate-300 shadow-sm text-xs sm:text-sm px-2 sm:px-3"
+                      className="bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 shadow-sm text-xs sm:text-sm px-2 sm:px-3 text-slate-900 dark:text-slate-100"
                     >
                       <FileText className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
                       <span className="hidden sm:inline">Horários Disponíveis</span>
@@ -979,7 +979,7 @@ const Dashboard = () => {
             
             {/* Seletor de Quadra para mobile/tablet - apenas na visualização semanal */}
             {viewMode === 'weekly' && (
-              <div className="md:hidden pt-2 border-t border-slate-200">
+              <div className="md:hidden pt-2 border-t border-slate-200 dark:border-slate-700">
                 <CourtSelector className="w-full" />
               </div>
             )}
@@ -1083,8 +1083,8 @@ const Dashboard = () => {
           >
                        {appointmentsLoading ? (
              <div className="flex items-center justify-center p-8">
-               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-               <span className="ml-3 text-slate-600">Carregando agenda...</span>
+               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400"></div>
+               <span className="ml-3 text-slate-600 dark:text-slate-400">Carregando agenda...</span>
              </div>
            ) : (
               viewMode === 'weekly' ? (
@@ -1329,7 +1329,7 @@ const Dashboard = () => {
       {isConfirmationModalOpen && blockedTimeSlot && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
           <motion.div 
-            className="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl"
+            className="bg-white dark:bg-slate-800 rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
@@ -1338,47 +1338,47 @@ const Dashboard = () => {
               <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
                 <AlertCircle className="h-5 w-5 text-yellow-600" />
               </div>
-              <h3 className="text-lg font-semibold text-slate-800">Confirmar Agendamento</h3>
+              <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Confirmar Agendamento</h3>
             </div>
             
-            <p className="text-slate-600 mb-4">
+            <p className="text-slate-600 dark:text-slate-400 mb-4">
               Você está tentando agendar um horário que normalmente não está disponível:
             </p>
             
-            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-6">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4 mb-6">
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-yellow-600" />
-                  <span className="font-medium">Data:</span>
-                  <span>{format(blockedTimeSlot.day, 'dd/MM/yyyy', { locale: ptBR })}</span>
+                  <Calendar className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                  <span className="font-medium text-slate-900 dark:text-slate-100">Data:</span>
+                  <span className="text-slate-700 dark:text-slate-300">{format(blockedTimeSlot.day, 'dd/MM/yyyy', { locale: ptBR })}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-yellow-600" />
-                  <span className="font-medium">Horário:</span>
-                  <span>{blockedTimeSlot.timeSlot}</span>
+                  <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                  <span className="font-medium text-slate-900 dark:text-slate-100">Horário:</span>
+                  <span className="text-slate-700 dark:text-slate-300">{blockedTimeSlot.timeSlot}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-yellow-600" />
-                  <span className="font-medium">Dia:</span>
-                  <span>{format(blockedTimeSlot.day, 'EEEE', { locale: ptBR })}</span>
+                  <Calendar className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                  <span className="font-medium text-slate-900 dark:text-slate-100">Dia:</span>
+                  <span className="text-slate-700 dark:text-slate-300">{format(blockedTimeSlot.day, 'EEEE', { locale: ptBR })}</span>
                 </div>
                 {getBlockadeReason && getBlockadeReason(blockedTimeSlot.day, blockedTimeSlot.timeSlot) && (
                   <div className="flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                    <span className="font-medium">Motivo do bloqueio:</span>
-                    <span className="text-yellow-700">{getBlockadeReason(blockedTimeSlot.day, blockedTimeSlot.timeSlot)}</span>
+                    <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                    <span className="font-medium text-slate-900 dark:text-slate-100">Motivo do bloqueio:</span>
+                    <span className="text-yellow-700 dark:text-yellow-300">{getBlockadeReason(blockedTimeSlot.day, blockedTimeSlot.timeSlot)}</span>
                   </div>
                 )}
                 {isRecurringBlockade && isRecurringBlockade(blockedTimeSlot.day, blockedTimeSlot.timeSlot) && (
                   <div className="flex items-center gap-2">
-                    <Repeat className="h-4 w-4 text-yellow-600" />
-                    <span className="font-medium text-yellow-700">Bloqueio Recorrente</span>
+                    <Repeat className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                    <span className="font-medium text-yellow-700 dark:text-yellow-300">Bloqueio Recorrente</span>
                   </div>
                 )}
               </div>
             </div>
             
-            <p className="text-slate-600 mb-6">
+            <p className="text-slate-600 dark:text-slate-400 mb-6">
               Deseja continuar mesmo assim?
             </p>
             
@@ -1386,7 +1386,7 @@ const Dashboard = () => {
               <Button
                 variant="outline"
                 onClick={handleCancelBlockedTimeSlot}
-                className="border-slate-200 hover:bg-slate-50"
+                className="border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100"
               >
                 Cancelar
               </Button>

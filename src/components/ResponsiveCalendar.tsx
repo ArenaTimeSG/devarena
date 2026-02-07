@@ -142,21 +142,21 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
       className="space-y-4"
     >
       {/* Day Header */}
-      <div className="flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4">
+      <div className="flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl p-4">
         <Button
           variant="ghost"
           size="sm"
           onClick={handlePreviousDay}
-          className="hover:bg-white/50 transition-colors"
+          className="hover:bg-white/50 dark:hover:bg-slate-700/50 transition-colors"
         >
           <ChevronLeft className="h-5 w-5" />
         </Button>
         
         <div className="text-center">
-          <h3 className="text-lg font-bold text-slate-800">
+          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">
             {format(currentDay, 'EEEE', { locale: ptBR })}
           </h3>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             {format(currentDay, 'dd/MM/yyyy', { locale: ptBR })}
             {isSameDay(currentDay, new Date()) && ' • Hoje'}
           </p>
@@ -166,7 +166,7 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
           variant="ghost"
           size="sm"
           onClick={handleNextDay}
-          className="hover:bg-white/50 transition-colors"
+          className="hover:bg-white/50 dark:hover:bg-slate-700/50 transition-colors"
         >
           <ChevronRight className="h-5 w-5" />
         </Button>
@@ -193,10 +193,10 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
               transition={{ duration: 0.3, delay: index * 0.05 }}
               className={`p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer ${
                 hasAppointment 
-                  ? 'border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50' 
+                  ? 'border-blue-200 dark:border-blue-700 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30' 
                   : isBlocked 
-                    ? 'border-slate-200 bg-slate-50' 
-                    : 'border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50/30'
+                    ? 'border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50' 
+                    : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50/30 dark:hover:bg-blue-900/20'
               }`}
               onClick={() => onCellClick(currentDay, timeSlot)}
               whileHover={{ scale: hasAppointment ? 1 : 1.02 }}
@@ -206,13 +206,13 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-slate-500" />
-                    <span className="font-mono font-semibold text-slate-700">
+                    <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">
                       {timeSlot}
                     </span>
                   </div>
                   
                   {isBlocked && (
-                    <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-md">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-700 px-2 py-1 rounded-md">
                       {getBlockadeReason ? getBlockadeReason(currentDay, timeSlot) || 'Bloqueado' : 'Bloqueado'}
                     </span>
                   )}
@@ -221,7 +221,7 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                 {hasAppointment && (
                   <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${getStatusColor(appointment.status, appointment.date, appointment.recurrence_id, appointment.is_cortesia)}`}></div>
-                    <span className="text-xs font-medium text-slate-600">
+                    <span className="text-xs font-medium text-slate-600 dark:text-slate-400">
                       {getStatusLabel(appointment.status, appointment.date, appointment.is_cortesia)}
                     </span>
                   </div>
@@ -263,20 +263,20 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
       transition={{ duration: 0.5 }}
     >
       {/* Week Header */}
-      <div className="flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 mb-4">
+      <div className="flex items-center justify-between bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-xl p-4 mb-4">
         <Button
           variant="ghost"
           size="sm"
           onClick={handlePreviousWeek}
-          className="hover:bg-white/50 transition-colors"
+          className="hover:bg-white/50 dark:hover:bg-slate-700/50 transition-colors"
         >
           <ChevronLeft className="h-4 w-4 mr-1" />
           Anterior
         </Button>
         
         <div className="text-center">
-          <h3 className="text-lg font-bold text-slate-800">Agenda Semanal</h3>
-          <p className="text-sm text-slate-600">
+          <h3 className="text-lg font-bold text-slate-800 dark:text-slate-100">Agenda Semanal</h3>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             {format(startOfWeek(currentWeek, { locale: ptBR }), 'dd/MM', { locale: ptBR })} - {format(addDays(startOfWeek(currentWeek, { locale: ptBR }), 6), 'dd/MM/yyyy', { locale: ptBR })}
           </p>
         </div>
@@ -285,7 +285,7 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
           variant="ghost"
           size="sm"
           onClick={handleNextWeek}
-          className="hover:bg-white/50 transition-colors"
+          className="hover:bg-white/50 dark:hover:bg-slate-700/50 transition-colors"
         >
           Próxima
           <ChevronRight className="h-4 w-4 ml-1" />
@@ -293,21 +293,21 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
       </div>
 
       {/* Week Grid */}
-      <div className="overflow-auto max-h-[600px] rounded-xl border border-slate-200">
+      <div className="overflow-auto max-h-[600px] rounded-xl border border-slate-200 dark:border-slate-700">
         <div className="min-w-[700px]">
           <table className="w-full border-collapse" style={{ position: 'relative' }}>
             <thead className="sticky top-0 z-10">
               <tr>
-                <th className="border border-slate-200 p-2 text-left font-bold bg-slate-50 text-slate-700 text-xs min-w-[60px]">
+                <th className="border border-slate-200 dark:border-slate-700 p-2 text-left font-bold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs min-w-[60px]">
                   Horário
                 </th>
                 {weekDays.map((day, i) => (
                   <motion.th 
                     key={i} 
-                    className={`border border-slate-200 p-2 text-center font-bold text-xs min-w-[100px] ${
+                    className={`border border-slate-200 dark:border-slate-700 p-2 text-center font-bold text-xs min-w-[100px] ${
                       isSameDay(day, new Date()) 
-                        ? 'bg-blue-50 text-blue-800 border-blue-200' 
-                        : 'bg-slate-50 text-slate-700'
+                        ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 border-blue-200 dark:border-blue-700' 
+                        : 'bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                     }`}
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -334,7 +334,7 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
               {timeSlots.map((timeSlot, i) => (
                 <tr key={i}>
                   <motion.td 
-                    className="border border-slate-200 p-2 font-bold bg-slate-50 text-slate-700 text-xs min-w-[60px] sticky left-0 z-10"
+                    className="border border-slate-200 dark:border-slate-700 p-2 font-bold bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs min-w-[60px] sticky left-0 z-10"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.3, delay: i * 0.02 }}
@@ -403,12 +403,12 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                     return (
                       <motion.td 
                         key={j} 
-                        className={`border border-slate-200 p-0 h-16 align-top cursor-pointer transition-all duration-200 min-w-[100px] relative overflow-visible ${
+                        className={`border border-slate-200 dark:border-slate-700 p-0 h-16 align-top cursor-pointer transition-all duration-200 min-w-[100px] relative overflow-visible ${
                           isBlocked 
-                            ? 'bg-slate-100 border-slate-300' 
+                            ? 'bg-slate-100 dark:bg-slate-800/50 border-slate-300 dark:border-slate-600' 
                             : isSameDay(day, new Date()) 
-                              ? 'bg-blue-50/50 hover:bg-blue-100/50' 
-                              : 'bg-white hover:bg-slate-50'
+                              ? 'bg-blue-50/50 dark:bg-blue-900/20 hover:bg-blue-100/50 dark:hover:bg-blue-900/30' 
+                              : 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700'
                         }`}
                         style={{ overflow: 'visible', position: 'relative' }}
                         onClick={(e) => {
@@ -680,10 +680,10 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
   );
 
   return (
-    <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-xl rounded-2xl overflow-hidden">
-      <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 border-b border-slate-200/60 p-6">
+    <Card className="shadow-lg border-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-2xl overflow-hidden">
+      <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-800 dark:to-slate-800 border-b border-slate-200/60 dark:border-slate-700/60 p-6">
         <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-xl font-bold text-slate-800">
+          <CardTitle className="flex items-center gap-2 text-xl font-bold text-slate-800 dark:text-slate-100">
             <Calendar className="h-6 w-6 text-blue-600" />
             Agenda
           </CardTitle>
@@ -692,7 +692,7 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
           {isMobile && (
             <div className="flex items-center gap-3">
               <div className="flex items-center space-x-2">
-                <Label htmlFor="view-mode" className="text-sm font-medium text-slate-700">
+                <Label htmlFor="view-mode" className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   Dia
                 </Label>
                 <Switch
@@ -701,7 +701,7 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
                   onCheckedChange={(checked) => setViewMode(checked ? 'week' : 'day')}
                   className="data-[state=checked]:bg-blue-600"
                 />
-                <Label htmlFor="view-mode" className="text-sm font-medium text-slate-700">
+                <Label htmlFor="view-mode" className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   Semana
                 </Label>
               </div>
