@@ -227,7 +227,7 @@ export const useCourts = () => {
       .insert({
         user_id: user.id,
         name: 'Quadra 1',
-        description: 'Quadra padrão',
+        description: null,
         is_active: true,
       })
       .select()

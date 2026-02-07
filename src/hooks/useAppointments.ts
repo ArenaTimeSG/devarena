@@ -65,7 +65,8 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
-  const { courtId } = options || {};
+  // Usar o courtId diretamente das options - React Query vai detectar mudanças na queryKey
+  const courtId = options?.courtId;
 
   // Função otimizada para buscar dados relacionados
   const fetchRelatedData = useCallback(async (appointments: any[]) => {
@@ -111,8 +112,13 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
     return { clientsMap: newClientsMap, modalitiesMap: newModalitiesMap };
   }, [user?.id]);
 
-  // Garantir que o queryKey sempre tenha um valor consistente
-  const queryKeyCourtId = courtId ?? 'all';
+  // Usar useMemo para garantir que queryKeyCourtId seja recalculado quando courtId mudar
+  // Se courtId for undefined ou null, usar 'all' para consistência
+  const queryKeyCourtId = useMemo(() => {
+    const value = courtId ?? 'all';
+    console.log('🔄 useAppointments - queryKeyCourtId recalculado:', value, 'de courtId:', courtId);
+    return value;
+  }, [courtId]);
   
   // Log quando courtId mudar - React Query vai automaticamente executar a nova query quando a query key mudar
   useEffect(() => {
@@ -140,7 +146,8 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
     queryKeyHashFn: undefined, // Usar hash padrão do React Query
     queryFn: async ({ queryKey }): Promise<AppointmentWithModality[]> => {
       // Obter courtId atual da query key para evitar problemas de closure
-      const currentCourtId = queryKey[2] === 'all' ? null : (queryKey[2] as string | null);
+      // queryKey[2] pode ser 'all' (quando não há filtro) ou uma string (UUID da quadra)
+      const currentCourtId = queryKey[2] === 'all' || queryKey[2] === null || queryKey[2] === undefined ? null : (queryKey[2] as string);
       const currentUserId = queryKey[1] as string;
       
       console.log('🔄 useAppointments - Executando queryFn');
@@ -149,6 +156,7 @@ export const useAppointments = (options?: UseAppointmentsOptions) => {
       console.log('🔄 useAppointments - currentCourtId da queryKey:', currentCourtId);
       console.log('🔄 useAppointments - courtId do closure:', courtId);
       console.log('🔄 useAppointments - queryKeyCourtId:', queryKeyCourtId);
+      console.log('🔄 useAppointments - USANDO currentCourtId da queryKey (não do closure):', currentCourtId);
       
       if (!currentUserId) {
         throw new Error('Usuário não autenticado');

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useCourts } from '@/hooks/useCourts';
 import { useSelectedCourt } from '@/hooks/useSelectedCourt';
 import {
@@ -17,8 +18,10 @@ type CourtSelectorProps = {
 
 export function CourtSelector({ className, showLabel = true }: CourtSelectorProps) {
   const { courts, isLoading } = useCourts();
-  const { selectedCourtId, selectedCourt, setSelectedCourtId } = useSelectedCourt();
+  const { selectedCourtId, setSelectedCourtId } = useSelectedCourt();
   const [localCourtId, setLocalCourtId] = useState<string>(selectedCourtId || '');
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // Sincronizar com o estado global
   useEffect(() => {
@@ -37,8 +40,30 @@ export function CourtSelector({ className, showLabel = true }: CourtSelectorProp
     // Atualizar estado local imediatamente para feedback visual
     setLocalCourtId(value);
     
-    // Atualizar estado global - React Query vai detectar automaticamente a mudança na query key
+    // Salvar no localStorage e atualizar estado
     setSelectedCourtId(newCourtId);
+
+    // Lista de rotas que não devem redirecionar (rotas públicas)
+    const publicRoutes = ['/auth', '/agendar', '/booking', '/cliente', '/payment'];
+    const isPublicRoute = publicRoutes.some(route => location.pathname.startsWith(route));
+    
+    // Se não for rota pública, navegar para dashboard e recarregar
+    if (!isPublicRoute) {
+      if (location.pathname !== '/dashboard') {
+        // Se não estiver no dashboard, navegar primeiro
+        console.log('🚀 CourtSelector - Navegando para /dashboard');
+        navigate('/dashboard');
+        // Aguardar navegação e então recarregar
+        setTimeout(() => {
+          console.log('🔄 CourtSelector - Recarregando página para atualizar dados');
+          window.location.reload();
+        }, 100);
+      } else {
+        // Se já estiver no dashboard, recarregar diretamente
+        console.log('🔄 CourtSelector - Recarregando página para atualizar dados');
+        window.location.reload();
+      }
+    }
   };
 
   if (isLoading) {
@@ -70,17 +95,24 @@ export function CourtSelector({ className, showLabel = true }: CourtSelectorProp
           <SelectValue placeholder="Selecione uma quadra" />
         </SelectTrigger>
         <SelectContent>
-          {courts.map((court) => (
-            <SelectItem key={court.id} value={court.id}>
-              <div className="flex items-center gap-2">
-                <div className={`h-2 w-2 rounded-full ${court.is_active ? 'bg-green-500' : 'bg-gray-400'}`} />
-                {court.name}
-                {court.description && (
-                  <span className="text-xs text-muted-foreground ml-2">({court.description})</span>
-                )}
-              </div>
-            </SelectItem>
-          ))}
+          {courts.map((court) => {
+            // Filtrar descrições que contenham "criada automaticamente" ou "padrão criada automaticamente"
+            const shouldShowDescription = court.description && 
+              !court.description.toLowerCase().includes('criada automaticamente') &&
+              !court.description.toLowerCase().includes('padrão criada automaticamente');
+            
+            return (
+              <SelectItem key={court.id} value={court.id}>
+                <div className="flex items-center gap-2">
+                  <div className={`h-2 w-2 rounded-full ${court.is_active ? 'bg-green-500' : 'bg-gray-400'}`} />
+                  {court.name}
+                  {shouldShowDescription && (
+                    <span className="text-xs text-muted-foreground ml-2">({court.description})</span>
+                  )}
+                </div>
+              </SelectItem>
+            );
+          })}
         </SelectContent>
       </Select>
     </div>

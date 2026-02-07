@@ -40,11 +40,18 @@ const CardQuadra = ({ quadra, onSelect }: CardQuadraProps) => {
           </div>
         </div>
         
-        {quadra.description && (
-          <p className="text-white/90 mb-6 text-sm leading-relaxed">
-            {quadra.description}
-          </p>
-        )}
+        {(() => {
+          // Filtrar descrições que contenham "criada automaticamente" ou "padrão criada automaticamente"
+          const shouldShowDescription = quadra.description && 
+            !quadra.description.toLowerCase().includes('criada automaticamente') &&
+            !quadra.description.toLowerCase().includes('padrão criada automaticamente');
+          
+          return shouldShowDescription ? (
+            <p className="text-white/90 mb-6 text-sm leading-relaxed">
+              {quadra.description}
+            </p>
+          ) : null;
+        })()}
         
         <div className="flex items-center gap-2 text-white/90">
           <Building2 className="w-4 h-4" />

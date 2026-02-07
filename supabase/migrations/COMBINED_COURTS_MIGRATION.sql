@@ -114,7 +114,7 @@ BEGIN
     -- If not found, create it
     IF v_court_id IS NULL THEN
         INSERT INTO public.courts (user_id, name, description, is_active)
-        VALUES (p_user_id, 'Quadra 1', 'Quadra padrão criada automaticamente', TRUE)
+        VALUES (p_user_id, 'Quadra 1', NULL, TRUE)
         RETURNING id INTO v_court_id;
     END IF;
     

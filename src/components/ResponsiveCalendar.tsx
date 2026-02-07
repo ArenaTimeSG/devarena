@@ -60,19 +60,40 @@ const ResponsiveCalendar: React.FC<ResponsiveCalendarProps> = ({
   getBlockadeReason,
 }) => {
   const isMobile = useIsMobile();
-  const [viewMode, setViewMode] = useState<'day' | 'week'>('day');
+  
+  // Carregar viewMode do localStorage ou usar padrão baseado no dispositivo
+  const getInitialViewMode = (): 'day' | 'week' => {
+    if (typeof window === 'undefined') {
+      return isMobile ? 'day' : 'week';
+    }
+    
+    try {
+      const saved = localStorage.getItem('responsiveCalendar_viewMode');
+      if (saved === 'day' || saved === 'week') {
+        return saved;
+      }
+    } catch (error) {
+      console.error('Erro ao ler localStorage:', error);
+    }
+    
+    return isMobile ? 'day' : 'week';
+  };
+  
+  const [viewMode, setViewMode] = useState<'day' | 'week'>(getInitialViewMode);
   const [currentDay, setCurrentDay] = useState(new Date());
   const [dragDirection, setDragDirection] = useState<'left' | 'right' | null>(null);
   const constraintsRef = useRef(null);
 
-  // Ajustar viewMode baseado no dispositivo
+  // Salvar viewMode no localStorage quando mudar
   useEffect(() => {
-    if (isMobile) {
-      setViewMode('day'); // Mobile sempre começa em dia
-    } else {
-      setViewMode('week'); // Desktop sempre em semana
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem('responsiveCalendar_viewMode', viewMode);
+      } catch (error) {
+        console.error('Erro ao salvar no localStorage:', error);
+      }
     }
-  }, [isMobile]);
+  }, [viewMode]);
 
   const weekDays = Array.from({ length: 7 }, (_, i) => {
     const weekStart = startOfWeek(currentWeek, { locale: ptBR });

@@ -258,7 +258,7 @@ const OnlineBooking = () => {
 
   const handleClienteSubmit = useCallback((cliente: Cliente) => {
     setReserva(prev => ({ ...prev, cliente }));
-    setStep(5);
+    setStep(6); // Avançar para o passo 6 (resumo e confirmação)
   }, []);
 
   // Função para processar pagamento - criar agendamento primeiro
@@ -342,6 +342,7 @@ const OnlineBooking = () => {
       
       const bookingData = {
         user_id: adminData.user.user_id,
+        court_id: reserva.quadra.id, // Adicionar court_id
         client_data: {
           name: reserva.cliente.nome,
           email: reserva.cliente.email,

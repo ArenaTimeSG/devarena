@@ -69,18 +69,21 @@ const Dashboard = () => {
   const { selectedCourtId } = useSelectedCourt();
   const [refreshKey, setRefreshKey] = useState(0);
   
-  // Passar courtId diretamente - React Query vai detectar mudança no queryKey automaticamente
+  // Passar selectedCourtId diretamente - React Query vai detectar mudança na queryKey
+  // Usar undefined ao invés de null para melhor detecção
   const { appointments, getFinancialSummary, isLoading: appointmentsLoading, refetch } = useAppointments({ 
     courtId: selectedCourtId || undefined
   });
   
-  // Forçar atualização do componente quando selectedCourtId mudar
+  // Log quando selectedCourtId mudar
   useEffect(() => {
-    if (!user?.id || selectedCourtId === undefined) return;
+    if (!user?.id) return;
     
     console.log('🔄 Dashboard - Quadra selecionada mudou para:', selectedCourtId);
+    console.log('🔄 Dashboard - Passando para useAppointments:', selectedCourtId || undefined);
+    console.log('🔄 Dashboard - QueryKey esperada:', ['appointments', user.id, (selectedCourtId || undefined) ?? 'all']);
     
-    // Forçar atualização do componente - React Query vai automaticamente executar a nova query
+    // Forçar atualização do componente
     setRefreshKey(prev => prev + 1);
   }, [selectedCourtId, user?.id]);
   

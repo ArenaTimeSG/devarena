@@ -908,14 +908,17 @@ const Financial = () => {
             <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 border-b border-slate-200/60 p-4 sm:p-6">
               <CardTitle className="flex items-center gap-2 text-lg sm:text-xl font-bold text-slate-800">
                 <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
-                Relatório Anual
+                {activeTab === 'horarios' ? 'Relatório Mensal' : 'Relatório Anual'}
               </CardTitle>
             </CardHeader>
             <CardContent className="p-4 sm:p-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="space-y-2">
                   <p className="text-xs sm:text-sm text-slate-600 font-medium">
-                    Gere um relatório completo em PDF com todos os dados financeiros do ano selecionado.
+                    {activeTab === 'horarios' 
+                      ? `Gere um relatório completo em PDF com todos os dados financeiros do mês selecionado (${format(selectedMonth, 'MMMM yyyy', { locale: ptBR })}).`
+                      : `Gere um relatório completo em PDF com todos os dados financeiros do ano selecionado (${selectedYear.getFullYear()}).`
+                    }
                   </p>
                   <p className="text-[11px] sm:text-xs text-slate-500">
                     O relatório incluirá: lista de agendamentos, resumo por cliente, estatísticas financeiras e receita total.

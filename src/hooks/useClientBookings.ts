@@ -236,10 +236,43 @@ export const useClientBookings = (adminUserId?: string) => {
         appointmentStatus
       });
 
+      // Calcular end_time baseado no horário de início + duração da modalidade
+      // Se não houver modality_id ou duração específica, usar 1 hora (60 minutos) como padrão
+      let durationMinutes = 60; // Padrão de 1 hora
+      
+      if (bookingData.modality_id) {
+        try {
+          // Buscar duração da modalidade
+          const { data: modalityData } = await supabase
+            .from('modalities')
+            .select('duration_minutes')
+            .eq('id', bookingData.modality_id)
+            .eq('user_id', bookingData.user_id)
+            .single();
+          
+          if (modalityData?.duration_minutes) {
+            durationMinutes = modalityData.duration_minutes;
+          }
+        } catch (error) {
+          console.warn('⚠️ useClientBookings: Erro ao buscar duração da modalidade, usando padrão de 60 minutos:', error);
+        }
+      }
+
+      // Calcular end_time: date + durationMinutes
+      const startDate = new Date(bookingData.date);
+      const endDate = new Date(startDate.getTime() + durationMinutes * 60 * 1000);
+      const end_time = endDate.toISOString();
+
+      console.log('🔍 useClientBookings: Calculando end_time:', {
+        date: bookingData.date,
+        durationMinutes,
+        end_time
+      });
 
       const appointmentData: any = {
         user_id: bookingData.user_id,
         date: bookingData.date,
+        end_time: end_time, // Adicionar end_time calculado
         status: appointmentStatus,
         modality: bookingData.modality,
         modality_id: bookingData.modality_id, // Adicionar modality_id
