@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Settings, SettingsUpdate, DEFAULT_SETTINGS } from '@/types/settings';
+import { logger } from '@/utils/logger';
 
 // Função para garantir dados seguros
 const getSafeSettings = (settings: Settings | null): Settings => {
@@ -219,7 +220,7 @@ export const useSettings = () => {
 
   // Função para atualizar tema (memoizada)
   const updateTheme = useCallback(async (theme: Settings['theme']) => {
-    console.log('🎨 Atualizando tema:', theme);
+    logger.log('🎨 Atualizando tema:', theme);
     await updateSettings({ theme });
   }, [updateSettings]);
 

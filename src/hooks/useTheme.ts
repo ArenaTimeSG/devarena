@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSettings } from './useSettings';
+import { logger } from '@/utils/logger';
 
 export type ThemeMode = 'light' | 'dark' | 'custom' | 'auto';
 
@@ -29,7 +30,7 @@ export const useTheme = () => {
   const applyTheme = (config: ThemeConfig) => {
     const root = document.documentElement;
     
-    console.log('🎨 Aplicando tema:', config.mode);
+    logger.log('🎨 Aplicando tema:', config.mode);
     
     // Aplicar modo de tema
     root.classList.remove('light', 'dark');
@@ -37,10 +38,10 @@ export const useTheme = () => {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       const themeToApply = prefersDark ? 'dark' : 'light';
       root.classList.add(themeToApply);
-      console.log('🎨 Tema automático aplicado:', themeToApply);
+      logger.log('🎨 Tema automático aplicado:', themeToApply);
     } else {
       root.classList.add(config.mode);
-      console.log('🎨 Tema manual aplicado:', config.mode);
+      logger.log('🎨 Tema manual aplicado:', config.mode);
     }
 
     // Aplicar cores personalizadas
@@ -78,7 +79,7 @@ export const useTheme = () => {
   const applyThemeDirectly = (mode: ThemeMode) => {
     const root = document.documentElement;
     
-    console.log('🎨 Aplicando tema diretamente:', mode);
+    logger.log('🎨 Aplicando tema diretamente:', mode);
     
     // Aplicar modo de tema
     root.classList.remove('light', 'dark');
@@ -86,10 +87,10 @@ export const useTheme = () => {
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       const themeToApply = prefersDark ? 'dark' : 'light';
       root.classList.add(themeToApply);
-      console.log('🎨 Tema automático aplicado:', themeToApply);
+      logger.log('🎨 Tema automático aplicado:', themeToApply);
     } else {
       root.classList.add(mode);
-      console.log('🎨 Tema manual aplicado:', mode);
+      logger.log('🎨 Tema manual aplicado:', mode);
     }
   };
 
@@ -118,12 +119,17 @@ export const useTheme = () => {
 
   // Aplicar tema inicial
   useEffect(() => {
-    console.log('🎨 Settings theme:', settings?.theme);
+    logger.log('🎨 Settings theme:', settings?.theme);
     if (settings?.theme) {
-      const config = { ...themeConfig, mode: settings.theme as ThemeMode };
-      console.log('🎨 Configurando tema inicial:', config);
+      const config = { ...DEFAULT_THEME_CONFIG, mode: settings.theme as ThemeMode };
+      logger.log('🎨 Configurando tema inicial:', config);
       setThemeConfig(config);
       applyTheme(config);
+    } else {
+      // Se não houver tema salvo, aplicar o tema padrão
+      logger.log('🎨 Nenhum tema salvo, aplicando padrão:', DEFAULT_THEME_CONFIG);
+      setThemeConfig(DEFAULT_THEME_CONFIG);
+      applyTheme(DEFAULT_THEME_CONFIG);
     }
   }, [settings?.theme]);
 

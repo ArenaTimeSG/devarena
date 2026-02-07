@@ -16,7 +16,8 @@ import { useUserProfile } from '@/hooks/useUserProfile';
 import { useSettings } from '@/hooks/useSettings';
 import { useClientBookings } from '@/hooks/useClientBookings';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, Clock, Bell, User, Shield, Settings as SettingsIcon, Palette, Save, AlertCircle, Calendar, Globe, Info, Building2, MessageSquare, RotateCcw } from 'lucide-react';
+import { useTheme } from '@/hooks/useTheme';
+import { ArrowLeft, Clock, Bell, User, Shield, Settings as SettingsIcon, Palette, Save, AlertCircle, Calendar, Globe, Info, Building2, MessageSquare, RotateCcw, Moon, Sun } from 'lucide-react';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import ChangePasswordModal from '@/components/ChangePasswordModal';
 import { ToggleAgendamento } from '@/components/booking-settings/ToggleAgendamento';
@@ -33,6 +34,30 @@ const Settings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { settings, isLoading: settingsLoading, error, updateSettings, refetch: refetchSettings } = useSettings();
+  const { themeConfig, updateThemeConfig, isDark } = useTheme();
+
+  // Função para atualizar tema com feedback
+  const handleThemeChange = async (mode: 'light' | 'dark' | 'auto') => {
+    try {
+      await updateThemeConfig({ mode });
+      toast({
+        title: 'Tema atualizado!',
+        description: mode === 'auto' 
+          ? 'O tema agora segue a preferência do seu sistema.'
+          : mode === 'dark'
+          ? 'Tema escuro ativado.'
+          : 'Tema claro ativado.',
+        duration: 2000,
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar tema:', error);
+      toast({
+        title: 'Erro ao atualizar tema',
+        description: 'Não foi possível atualizar o tema. Tente novamente.',
+        variant: 'destructive',
+      });
+    }
+  };
   
   // Hook para agendamentos de clientes
   const { agendamentos, isLoading: bookingsLoading, confirmBooking, cancelBooking, markCompleted } = useClientBookings(user?.id);
@@ -674,7 +699,7 @@ Agradecemos a confirmação!`
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
       {/* Modern Header */}
       <motion.header 
         className="bg-white/80 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-30 shadow-sm"
@@ -722,6 +747,7 @@ Agradecemos a confirmação!`
                 { value: "modalities", label: "Modalidades", icon: <Calendar className="h-4 w-4" /> },
                 { value: "online-booking", label: "Agendamento Online", icon: <Globe className="h-4 w-4" /> },
                 { value: "notifications", label: "Lembretes", icon: <Bell className="h-4 w-4" /> },
+                { value: "theme", label: "Temas", icon: <Palette className="h-4 w-4" /> },
                 { value: "security", label: "Segurança", icon: <Shield className="h-4 w-4" /> },
               ]}
               value={activeTab}
@@ -1015,6 +1041,178 @@ Agradecemos a confirmação!`
                       <Calendar className="h-4 w-4 mr-2" />
                       Gerenciar Modalidades
                     </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Aba Temas */}
+            <TabsContent value="theme" className="space-y-6">
+              <Card className="shadow-lg border-0 bg-white/90 backdrop-blur-xl rounded-2xl overflow-hidden dark:bg-slate-900/90">
+                <CardHeader className="bg-gradient-to-r from-slate-50 to-blue-50 border-b border-slate-200/60 p-6 dark:from-slate-800 dark:to-slate-800 dark:border-slate-700">
+                  <CardTitle className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                    <Palette className="h-6 w-6" />
+                    Configurações de Tema
+                  </CardTitle>
+                  <CardDescription className="text-slate-600 dark:text-slate-400 mt-2">
+                    Personalize a aparência da aplicação escolhendo entre tema claro ou escuro
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-6 space-y-6">
+                  {/* Modo de Tema */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <Label className="text-base font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                          {isDark ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+                          Modo de Tema
+                        </Label>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">
+                          Escolha entre tema claro, escuro ou automático (segue a preferência do sistema)
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {/* Tema Claro */}
+                      <div
+                        onClick={() => handleThemeChange('light')}
+                        className={`
+                          relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-200
+                          ${themeConfig.mode === 'light' 
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+                            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-blue-300 dark:hover:border-blue-600'
+                          }
+                        `}
+                      >
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-400 to-orange-400 flex items-center justify-center">
+                            <Sun className="h-5 w-5 text-white" />
+                          </div>
+                          <div>
+                            <div className="font-semibold text-slate-800 dark:text-slate-200">Claro</div>
+                            <div className="text-xs text-slate-600 dark:text-slate-400">Tema claro padrão</div>
+                          </div>
+                        </div>
+                        {themeConfig.mode === 'light' && (
+                          <div className="absolute top-2 right-2">
+                            <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                              <div className="w-2 h-2 rounded-full bg-white"></div>
+                            </div>
+                          </div>
+                        )}
+                        <div className="space-y-2">
+                          <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                          <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded w-3/4"></div>
+                          <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded w-1/2"></div>
+                        </div>
+                      </div>
+
+                      {/* Tema Escuro */}
+                      <div
+                        onClick={() => handleThemeChange('dark')}
+                        className={`
+                          relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-200
+                          ${themeConfig.mode === 'dark' 
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+                            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-blue-300 dark:hover:border-blue-600'
+                          }
+                        `}
+                      >
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center">
+                            <Moon className="h-5 w-5 text-white" />
+                          </div>
+                          <div>
+                            <div className="font-semibold text-slate-800 dark:text-slate-200">Escuro</div>
+                            <div className="text-xs text-slate-600 dark:text-slate-400">Tema escuro</div>
+                          </div>
+                        </div>
+                        {themeConfig.mode === 'dark' && (
+                          <div className="absolute top-2 right-2">
+                            <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                              <div className="w-2 h-2 rounded-full bg-white"></div>
+                            </div>
+                          </div>
+                        )}
+                        <div className="space-y-2">
+                          <div className="h-2 bg-slate-700 dark:bg-slate-600 rounded"></div>
+                          <div className="h-2 bg-slate-700 dark:bg-slate-600 rounded w-3/4"></div>
+                          <div className="h-2 bg-slate-700 dark:bg-slate-600 rounded w-1/2"></div>
+                        </div>
+                      </div>
+
+                      {/* Tema Automático */}
+                      <div
+                        onClick={() => handleThemeChange('auto')}
+                        className={`
+                          relative p-4 rounded-xl border-2 cursor-pointer transition-all duration-200
+                          ${themeConfig.mode === 'auto' 
+                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' 
+                            : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-blue-300 dark:hover:border-blue-600'
+                          }
+                        `}
+                      >
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                            <SettingsIcon className="h-5 w-5 text-white" />
+                          </div>
+                          <div>
+                            <div className="font-semibold text-slate-800 dark:text-slate-200">Automático</div>
+                            <div className="text-xs text-slate-600 dark:text-slate-400">Segue o sistema</div>
+                          </div>
+                        </div>
+                        {themeConfig.mode === 'auto' && (
+                          <div className="absolute top-2 right-2">
+                            <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center">
+                              <div className="w-2 h-2 rounded-full bg-white"></div>
+                            </div>
+                          </div>
+                        )}
+                        <div className="space-y-2">
+                          <div className="h-2 bg-gradient-to-r from-slate-200 to-slate-700 dark:from-slate-700 dark:to-slate-200 rounded"></div>
+                          <div className="h-2 bg-gradient-to-r from-slate-200 to-slate-700 dark:from-slate-700 dark:to-slate-200 rounded w-3/4"></div>
+                          <div className="h-2 bg-gradient-to-r from-slate-200 to-slate-700 dark:from-slate-700 dark:to-slate-200 rounded w-1/2"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator className="bg-slate-200 dark:bg-slate-700" />
+
+                  {/* Switch Rápido */}
+                  <div className="flex items-center justify-between p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                    <div className="space-y-1">
+                      <Label className="text-base font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                        Alternância Rápida
+                      </Label>
+                      <p className="text-sm text-slate-600 dark:text-slate-400">
+                        Ative ou desative o tema escuro rapidamente
+                      </p>
+                    </div>
+                    <Switch
+                      checked={isDark}
+                      onCheckedChange={(checked) => {
+                        handleThemeChange(checked ? 'dark' : 'light');
+                      }}
+                      className="data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                    />
+                  </div>
+
+                  {/* Informação */}
+                  <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                      <div className="space-y-1">
+                        <p className="text-sm font-medium text-blue-900 dark:text-blue-200">
+                          Sobre os Temas
+                        </p>
+                        <p className="text-xs text-blue-700 dark:text-blue-300">
+                          O tema escolhido será aplicado em toda a aplicação e salvo automaticamente. 
+                          O modo automático detecta a preferência do seu sistema operacional e ajusta o tema conforme necessário.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
